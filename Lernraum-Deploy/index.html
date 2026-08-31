@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lernraum</title>
+<meta content="#7E9070" name="theme-color"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="default" name="apple-mobile-web-app-status-bar-style"/>
+<meta content="Lernraum" name="apple-mobile-web-app-title"/>
+<link href="manifest.json" rel="manifest"/>
+<link href="assets/app-icon-192.png" rel="apple-touch-icon"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&amp;family=Karla:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="style.css?v=37" rel="stylesheet"/>
+<style id="dashboard-v3-overrides">
+/* Dashboard V3 - nur fuer die neue Startseite */
+#view-dashboard .dash-new-stats{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:14px !important;
+}
+#view-dashboard .dash-new-stats .dash-new-stat{
+  display:flex !important;
+}
+#view-dashboard .dash-new-stats .dash-new-stat:nth-child(2){
+  display:flex !important;
+}
+#view-dashboard .dash-new-main-grid{
+  display:grid !important;
+  grid-template-columns:minmax(230px,.78fr) minmax(300px,1.05fr) minmax(300px,1fr) !important;
+  gap:16px !important;
+  align-items:stretch !important;
+}
+#view-dashboard .dash-plan-card{min-width:0 !important;}
+#view-dashboard .dash-plan-preview{
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+  margin-top:8px;
+}
+#view-dashboard .dash-plan-empty{
+  min-height:195px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  color:var(--ink-soft);
+  background:var(--bg-soft);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:22px;
+}
+#view-dashboard .dash-plan-empty strong{
+  color:var(--ink);
+  font-family:'Fraunces',serif;
+  font-size:16px;
+  margin-bottom:4px;
+}
+#view-dashboard .dash-plan-item{
+  display:grid;
+  grid-template-columns:52px minmax(0,1fr) auto;
+  align-items:center;
+  gap:11px;
+  padding:12px 13px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:var(--bg-soft);
+}
+#view-dashboard .dash-plan-date{
+  text-align:center;
+  padding-right:10px;
+  border-right:1px solid var(--line);
+}
+#view-dashboard .dash-plan-date strong{
+  display:block;
+  font-family:'Fraunces',serif;
+  font-size:19px;
+  line-height:1;
+}
+#view-dashboard .dash-plan-date span{
+  display:block;
+  margin-top:3px;
+  color:var(--ink-faint);
+  font:9px 'IBM Plex Mono',monospace;
+  text-transform:uppercase;
+}
+#view-dashboard .dash-plan-info{min-width:0;}
+#view-dashboard .dash-plan-info strong,
+#view-dashboard .dash-plan-info small{
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+#view-dashboard .dash-plan-info strong{font-size:12.5px;}
+#view-dashboard .dash-plan-info small{margin-top:4px;color:var(--ink-soft);font-size:10.5px;}
+#view-dashboard .dash-plan-time{color:var(--sage-dark);font:10px 'IBM Plex Mono',monospace;white-space:nowrap;}
+#view-dashboard .dash-deadline-bar{
+  width:100% !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:15px !important;
+  margin-top:16px !important;
+  padding:15px 18px !important;
+  background:var(--surface) !important;
+  border:1px solid var(--line) !important;
+  border-radius:16px !important;
+  box-shadow:var(--shadow-sm) !important;
+}
+#view-dashboard .dash-deadline-icon{
+  width:46px;height:46px;flex:0 0 46px;display:grid;place-items:center;
+  border-radius:14px;background:var(--sage-tint);color:var(--sage-dark);font-size:20px;font-weight:700;
+}
+#view-dashboard .dash-deadline-content{flex:1;min-width:0;}
+#view-dashboard .dash-deadline-title{
+  margin-top:3px;font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+#view-dashboard .dash-deadline-meta{margin-top:3px;color:var(--ink-soft);font-size:11px;}
+#view-dashboard .dash-deadline-open{
+  flex:0 0 auto;border:0;background:transparent;color:var(--sage-dark);font-size:11px;font-weight:700;cursor:pointer;padding:8px 4px;
+}
+#view-dashboard .dash-deadline-bar.urgent{border-color:rgba(166,95,73,.35) !important;}
+#view-dashboard .dash-deadline-bar.urgent .dash-deadline-icon{background:var(--rust-tint);color:var(--rust);}
+#view-dashboard .dash-cal-extra-dots{
+  position:absolute;left:50%;bottom:3px;transform:translateX(-50%);display:flex;gap:2px;pointer-events:none;
+}
+#view-dashboard .dash-cal-extra-dot{width:4px;height:4px;border-radius:50%;display:block;}
+#view-dashboard .dash-cal-extra-dot.task{background:var(--sage-dark);}
+#view-dashboard .dash-cal-extra-dot.plan{background:var(--dusk);}
+#view-dashboard .mini-cal-day.today .dash-cal-extra-dot{background:#fff;}
+#view-dashboard .dash-new-bottom-grid{display:none !important;}
+@media(max-width:1150px){
+  #view-dashboard .dash-new-stats{grid-template-columns:repeat(3,minmax(0,1fr)) !important;}
+  #view-dashboard .dash-new-main-grid{grid-template-columns:1fr 1fr !important;}
+  #view-dashboard .dash-calendar-card{grid-column:1/-1 !important;}
+}
+@media(max-width:760px){
+  #view-dashboard .dash-new-stats,#view-dashboard .dash-new-main-grid{grid-template-columns:1fr !important;}
+  #view-dashboard .dash-calendar-card{grid-column:auto !important;}
+  #view-dashboard .dash-deadline-bar{align-items:flex-start !important;flex-wrap:wrap !important;}
+  #view-dashboard .dash-deadline-open{width:100%;padding-left:61px;text-align:left;}
+  #view-dashboard .dash-plan-item{grid-template-columns:46px minmax(0,1fr);}
+  #view-dashboard .dash-plan-time{grid-column:2;}
+}
+/* ============================================================
+   DASHBOARD – EINHEITLICHE ÜBERSCHRIFTEN
+   Alle Kartenüberschriften wie "Offene Aufgaben"
+============================================================ */
+#view-dashboard .dash-stat-title,
+#view-dashboard .dash-section-title,
+#view-dashboard .dash-deadline-content > .eyebrow {
+  font-family:'Karla', sans-serif !important;
+  font-size:12px !important;
+  font-weight:700 !important;
+  line-height:1.25 !important;
+  letter-spacing:0 !important;
+  text-transform:none !important;
+  color:var(--ink) !important;
+}
+#view-dashboard .dash-section-title,
+#view-dashboard .dash-deadline-content > .eyebrow {
+  margin:0 !important;
+}
+#view-dashboard .dash-card-header {
+  align-items:flex-start !important;
+}
+</style>
+<style id="dashboard-heading-final-fix">
+/* FINAL: alle Dashboard-Kartenüberschriften exakt gleich */
+#view-dashboard .dash-card-title{
+  font-family:'Karla', sans-serif !important;
+  font-size:16px !important;
+  font-weight:800 !important;
+  line-height:1.25 !important;
+  letter-spacing:0 !important;
+  text-transform:none !important;
+  color:var(--ink) !important;
+  margin:0 0 7px 0 !important;
+}
+#view-dashboard .dash-new-stat{
+  align-items:flex-start !important;
+}
+#view-dashboard .dash-stat-content{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:flex-start !important;
+  justify-content:flex-start !important;
+  min-width:0 !important;
+}
+#view-dashboard .dash-stat-number{
+  margin:0 !important;
+}
+#view-dashboard .dash-stat-progress{
+  margin-top:9px !important;
+}
+#view-dashboard .dash-card-header{
+  align-items:flex-start !important;
+}
+/* "Meine Aufgaben" bleibt alleine, ohne zweite Heute-Registerkarte */
+#view-dashboard .dash-task-tabs{
+  gap:0 !important;
+}
+</style>
+</head>
+<body>
+<div class="app">
+<!-- ======================================================
+         SIDEBAR
+ ======================================================= -->
+<div class="sidebar">
+<div class="brand">
+      Lern<span>raum</span>
+</div>
+<button id="lernraum-sync-button" class="sync-button" onclick="openSyncDialog()" type="button" style="width:calc(100% - 24px); margin:12px 12px 0 12px; padding:10px 0; border:1px solid var(--line); border-radius:8px; background:var(--bg-soft); color:var(--ink); font-family:inherit; font-size:12px; font-weight:700; cursor:pointer;">☁ Daten sichern</button>
+<div id="lernraum-sync-status" style="margin:5px 12px 0 12px; text-align:center; font-family:inherit; font-size:10px; line-height:1.3; color:var(--ink); opacity:.55;">zuletzt gesichert: nie</div>
+<button class="pwa-install-btn" hidden="" id="pwa-install-btn" onclick="installLernraumApp()" type="button">
+<span aria-hidden="true">↧</span>
+<span>App installieren</span>
+</button>
+<div style="padding:12px 0;"></div>
+<div class="nav-item active" data-view="dashboard">
+<svg class="ico" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<rect height="9" rx="1.5" width="7" x="3" y="3"></rect>
+<rect height="5" rx="1.5" width="7" x="14" y="3"></rect>
+<rect height="9" rx="1.5" width="7" x="14" y="12"></rect>
+<rect height="5" rx="1.5" width="7" x="3" y="16"></rect>
+</svg>
+       Dashboard
+   </div>
+<div class="nav-item" data-view="calendar">
+<svg class="ico" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<rect height="15.5" rx="2" width="17" x="3.5" y="5"></rect>
+<path d="M3.5 9.5h17M8 3v4M16 3v4"></path>
+</svg>
+    Kalender
+   </div>
+<div class="nav-item" data-view="modules">
+<svg class="ico" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<rect height="7" rx="1.5" width="8" x="3" y="4"></rect>
+<rect height="7" rx="1.5" width="8" x="13" y="4"></rect>
+<rect height="7" rx="1.5" width="8" x="3" y="13"></rect>
+<rect height="7" rx="1.5" width="8" x="13" y="13"></rect>
+</svg>
+    Module
+   </div>
+<div class="nav-item" data-view="notes">
+<svg class="ico" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M4 19.5V4.8a1.8 1.8 0 0 1 1.8-1.8h9.4L20 6.8V19.5a1.8 1.8 0 0 1-1.8 1.8H5.8A1.8 1.8 0 0 1 4 19.5Z"></path>
+<path d="M14.5 3v3.2A1.8 1.8 0 0 0 16.3 8H20"></path>
+<path d="M8 12h8M8 16h5"></path>
+</svg>
+    Notizen
+   </div>
+<div class="nav-item" data-view="todo">
+<svg class="ico" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M9 6h11M9 12h11M9 18h11"></path>
+<path d="m3.5 6 1 1 2-2M3.5 12l1 1 2-2M3.5 18l1 1 2-2"></path>
+</svg>
+    To-Do
+   </div>
+<div class="nav-item" data-view="cards">
+<svg class="ico" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<rect height="9.5" rx="2" transform="rotate(-4 12 10)" width="14" x="5" y="6"></rect>
+<rect height="9.5" rx="2" width="14" x="5" y="8.5"></rect>
+</svg>
+    Karteikarten
+   </div>
+<div class="nav-item" data-view="planner">
+<svg class="ico" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M4 5h16v15H4zM8 3v4M16 3v4M4 9h16"></path>
+<path d="m8 14 2 2 5-5"></path>
+</svg>
+       Lernplan
+   </div>
+<div class="nav-item" data-view="docs">
+<svg class="ico" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<rect height="6.5" rx="1" width="4.5" x="7" y="2.5"></rect>
+<rect height="13.5" rx="3.5" width="16" x="4" y="8"></rect>
+<circle cx="12" cy="15" r="2.3"></circle>
+<path d="M12 12.7v-1.2"></path>
+</svg>
+       Unterlagen
+   </div>
+<div class="nav-item" data-view="stats">
+<svg class="ico" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path>
+</svg>
+       Statistik
+   </div>
+<div class="nav-item" data-view="settings">
+<svg class="ico" fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="1.5"></circle>
+<path d="M12 1v6m0 10v6M4.22 4.22l4.24 4.24m2.12 2.12l4.24 4.24M1 12h6m10 0h6M4.22 19.78l4.24-4.24m2.12-2.12l4.24-4.24M19.78 19.78l-4.24-4.24m-2.12-2.12l-4.24-4.24"></path>
+</svg>
+       Einstellungen
+   </div>
+<div class="lernuhr-widget" id="lernuhr-widget">
+<div class="lernuhr-label">Lernuhr</div>
+</div>
+<div class="sidebar-foot">
+      für ruhige Lernstunden ✎
+  </div>
+</div>
+<!-- ======================================================
+       HAUPTBEREICH
+======================================================= -->
+<div class="main">
+<!-- ====================================================
+          DASHBOARD
+  ===================================================== -->
+<div class="view active" id="view-dashboard">
+  <div class="dash-new-head">
+    <div class="eyebrow" id="dash-date"></div>
+    <h1 class="view-title" id="dash-greeting">Guten Tag!</h1>
+  </div>
+  <div class="dash-new-stats">
+    <div class="dash-new-stat">
+      <div class="dash-stat-icon">&#10003;</div>
+      <div class="dash-stat-content">
+        <div class="dash-card-title">Offene Aufgaben</div>
+        <div class="dash-stat-number" id="stat-todos">0</div>
+      </div>
+    </div>
+    <div class="dash-new-stat">
+      <div class="dash-stat-icon">&#9638;</div>
+      <div class="dash-stat-content">
+        <div class="dash-card-title">N&auml;chster Termin</div>
+        <div class="dash-stat-number dash-stat-next" id="stat-next">-</div>
+      </div>
+    </div>
+    <div class="dash-new-stat">
+      <div class="dash-stat-icon sage">&#9719;</div>
+      <div class="dash-stat-content" style="width:100%;">
+        <div class="dash-card-title">Lernzeit diese Woche</div>
+        <div class="dash-stat-number" id="dash-week-learning">0 Min.</div>
+        <div class="dash-stat-progress">
+          <div id="dash-stat-progress-fill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dash-new-main-grid">
+    <div class="dash-new-card dash-plan-card">
+      <div class="dash-card-header">
+        <div>
+          <div class="dash-card-title">Lernplan</div>
+          <div class="dash-section-date">Deine n&auml;chsten Lerneinheiten</div>
+        </div>
+        <button class="link-btn" onclick="goToView('planner')">&Ouml;ffnen &rarr;</button>
+      </div>
+      <div class="dash-plan-preview" id="dash-plan-preview">
+        <div class="dash-plan-empty">
+          <strong>Noch nichts geplant</strong>
+          <span>Trage im Lernplan deine n&auml;chste Lerneinheit ein.</span>
+        </div>
+      </div>
+    </div>
+    <div class="dash-new-card">
+      <div class="dash-card-header">
+        <div class="dash-card-title">Aufgaben</div>
+        <button class="link-btn" onclick="goToView('todo')">Alle ansehen &rarr;</button>
+      </div>
+      <div class="dash-task-tabs">
+        <span class="active">Meine Aufgaben</span>
+      </div>
+      <ul class="mini-list dash-task-list" id="dash-todo-preview"></ul>
+      <div class="dash-inline-add">
+        <input type="text" id="dash-quick-todo" placeholder="Neue Aufgabe..." onkeydown="if(event.key==='Enter') quickAddTodo()">
+        <button onclick="quickAddTodo()" title="Aufgabe hinzuf&uuml;gen">+</button>
+      </div>
+    </div>
+    <div class="dash-new-card dash-calendar-card">
+      <div class="dash-card-header">
+        <div class="dash-card-title">Kalender</div>
+        <button class="link-btn" onclick="goToView('calendar')">&Ouml;ffnen &rarr;</button>
+      </div>
+      <div class="mini-cal-nav">
+        <button class="icon-btn" onclick="dashCalShift(-1)" aria-label="Vorheriger Monat">&lsaquo;</button>
+        <h3 id="dash-cal-label"></h3>
+        <button class="icon-btn" onclick="dashCalShift(1)" aria-label="N&auml;chster Monat">&rsaquo;</button>
+      </div>
+      <div class="mini-cal-grid" id="dash-cal-dow-row"></div>
+      <div class="mini-cal-grid" id="dash-cal-grid"></div>
+    </div>
+  </div>
+  <div class="dash-deadline-bar" id="dash-deadline-bar">
+    <div class="dash-deadline-icon">&#10003;</div>
+    <div class="dash-deadline-content">
+      <div class="dash-card-title">N&auml;chste Deadline</div>
+      <div class="dash-deadline-title" id="dash-deadline-title">Keine Deadline geplant</div>
+    </div>
+    <button class="dash-deadline-open" onclick="goToView('todo')">&Ouml;ffnen &rarr;</button>
+  </div>
+  <!-- Kompatibilitaet fuer bestehende script.js: diese alten Dashboard-Ziele bleiben unsichtbar vorhanden. -->
+  <div hidden aria-hidden="true">
+    <span id="stat-notes">0</span>
+    <span id="dash-today-label"></span>
+    <ul id="dash-upcoming"></ul>
+    <div id="dash-today-tasks">
+    <span id="dash-todos-today"></span>
+    <span id="dash-next-detail"></span>
+    <span id="dash-task-today-count"></span>
+    <span id="dash-deadline-meta"></span>
+  </div>
+    <span id="dash-progress-time"></span>
+    <span id="dash-progress-message"></span>
+    <div id="dash-progress-line-fill"></div>
+    <div id="dash-due-cards"></div>
+    <div id="dash-week-bars"></div>
+  </div>
+</div>
+<!-- ====================================================
+       NOTIZEN
+===================================================== -->
+<div class="view" id="view-notes">
+<div class="view-head">
+<div>
+<div class="eyebrow">
+             Notizbereich
+         </div>
+<h1 class="view-title">
+             Notizen
+         </h1>
+</div>
+<button class="btn" onclick="createNote()">
+        + Neue Notiz
+    </button>
+</div>
+<div class="card" style="margin-bottom:18px;">
+<div class="folder-row" id="note-folder-chips"></div>
+<div class="folder-add">
+<input id="note-folder-input" placeholder="Neue Kategorie…" type="text"/>
+<button class="btn ghost small" onclick="addNoteFolder()">
+            + Kategorie
+        </button>
+</div>
+</div>
+<div class="notes-layout">
+<div>
+<div class="note-list-tools">
+<input id="note-search" oninput="renderNotesList()" placeholder="Notizen durchsuchen…" type="text"/>
+<select id="note-sort" onchange="renderNotesList()">
+<option value="updated">
+               Zuletzt bearbeitet
+             </option>
+<option value="title">
+               Titel
+             </option>
+<option value="favorite">
+               Favoriten zuerst
+             </option>
+</select>
+<button class="btn ghost small" id="trash-toggle" onclick="toggleTrashView()">
+             Papierkorb
+         </button>
+</div>
+<div class="notes-list" id="notes-list"></div>
+</div>
+<div class="card note-editor" id="note-editor-wrap"></div>
+</div>
+</div>
+<!-- ====================================================
+       KALENDER
+       calendar-redesign.js ersetzt diesen Inhalt komplett.
+       Fallback bewusst nur Monat + Woche.
+===================================================== -->
+<div class="view" id="view-calendar">
+<div class="view-head">
+<div class="eyebrow">
+             Termine &amp; Fristen
+         </div>
+<h1 class="view-title">
+             Kalender
+         </h1>
+</div>
+<div class="cal-layout">
+<div class="card">
+<div class="cal-nav">
+<button class="icon-btn" onclick="calShift(-1)">
+                 ←
+             </button>
+<h3 id="cal-label"></h3>
+<button class="icon-btn" onclick="calShift(1)">
+      →
+  </button>
+<div class="cal-view-switch">
+<button class="cal-view-btn active" data-view="month" onclick="setCalViewMode('month')">
+          Monat
+      </button>
+<button class="cal-view-btn" data-view="week" onclick="setCalViewMode('week')">
+          Woche
+      </button>
+</div>
+</div>
+<div id="cal-month-wrap">
+<div class="cal-grid" id="cal-dow-row"></div>
+<div class="cal-grid" id="cal-grid"></div>
+</div>
+<div id="cal-week-wrap" style="display:none; overflow-x:auto;"></div>
+</div>
+<div class="card day-panel">
+<h4 id="day-panel-title">
+    Eintrag
+  </h4>
+<div class="event-form">
+<input id="event-date" type="date"/>
+<input autocomplete="off" id="event-time-simple" inputmode="numeric" placeholder="z. B. 14:30" type="text"/>
+<input id="event-title" placeholder="Titel des Termins" type="text"/>
+<select id="event-type">
+<option value="termin">
+          Persönlich
+        </option>
+<option value="vorlesung">
+      Vorlesung
+    </option>
+<option value="uebung">
+      Übung
+    </option>
+<option value="seminar">
+      Seminar
+    </option>
+<option value="klausur">
+      Klausur
+    </option>
+<option value="abgabe">
+      Abgabe
+    </option>
+<option value="praktikum">
+      Praktikum
+    </option>
+<option value="lerngruppe">
+      Lerngruppe
+    </option>
+</select>
+<select id="event-recur">
+<option value="none">
+      Keine Wiederholung
+    </option>
+</select>
+<button class="btn small" onclick="addEvent()">
+    Hinzufügen
+             </button>
+</div>
+<div id="day-events"></div>
+<div class="upcoming-title">
+             Demnächst
+         </div>
+<div id="upcoming-events"></div>
+</div>
+</div>
+</div>
+<!-- ====================================================
+       EINSTELLUNGEN
+===================================================== -->
+<style>
+.settings-toggle {
+  position: relative;
+  display: inline-flex;
+  width: 50px;
+  height: 28px;
+  background: var(--line);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  border: none;
+  padding: 0;
+}
+.settings-toggle.active {
+  background: var(--sage);
+}
+.settings-toggle::after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: left 0.3s ease;
+}
+.settings-toggle.active::after {
+  left: 24px;
+}
+</style>
+
+<div class="view" id="view-settings">
+<div class="view-head">
+<div>
+<div class="eyebrow">EINSTELLUNGEN</div>
+<h1 class="view-title">Konfiguration</h1>
+</div>
+</div>
+
+<!-- BENACHRICHTIGUNGEN -->
+<div class="card">
+<div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:20px; padding-bottom:20px; border-bottom:1px solid var(--line);">
+<div style="flex:1;">
+<h3 style="margin:0 0 4px 0; font-size:15px; font-weight:600;">Benachrichtigungen</h3>
+<p style="margin:0; font-size:12px; color:var(--text-secondary);">Erinnerungen für Ereignisse</p>
+</div>
+<button class="settings-toggle" id="notif-toggle" onclick="toggleNotifications()" style="margin-left:12px; margin-top:2px;"></button>
+</div>
+<div id="notif-settings" style="display:none; margin-top:15px; padding-top:15px; border-top:1px solid var(--line);">
+<div style="margin-bottom:14px;">
+<label style="display:block; margin-bottom:8px; font-size:12px; font-weight:600; color:var(--text-secondary);">Kalender-Einträge</label>
+<select id="cal-time" style="padding:10px 12px; border-radius:6px; border:1px solid var(--line); width:100%; font-size:13px; background:var(--bg-soft); color:var(--text);">
+<option value="week">1 Woche vorher</option>
+<option value="3days">3 Tage vorher</option>
+<option value="day" selected>1 Tag vorher</option>
+<option value="hour">1 Stunde vorher</option>
+</select>
+</div>
+<div style="margin-bottom:14px;">
+<label style="display:block; margin-bottom:8px; font-size:12px; font-weight:600; color:var(--text-secondary);">Abgabetermine</label>
+<select id="deadline-time" style="padding:10px 12px; border-radius:6px; border:1px solid var(--line); width:100%; font-size:13px; background:var(--bg-soft); color:var(--text);">
+<option value="week">1 Woche vorher</option>
+<option value="3days" selected>3 Tage vorher</option>
+<option value="day">1 Tag vorher</option>
+<option value="hour">1 Stunde vorher</option>
+</select>
+</div>
+<button class="btn" onclick="saveNotificationSettings()" style="width:100%; font-size:12px;">Speichern</button>
+</div>
+</div>
+
+<!-- DESIGN -->
+<div class="card" style="margin-top:12px;">
+<div style="display:flex; align-items:flex-start; justify-content:space-between;">
+<div style="flex:1;">
+<h3 style="margin:0 0 4px 0; font-size:15px; font-weight:600;">Erscheinungsbild</h3>
+<p style="margin:0; font-size:12px; color:var(--text-secondary);">Dunkel-Modus</p>
+</div>
+<button class="settings-toggle" id="theme-toggle-settings" onclick="toggleTheme()" style="margin-left:12px; margin-top:2px;"></button>
+</div>
+</div>
+
+<!-- KONTO & SYNC -->
+<div class="card" style="margin-top:12px;">
+<h3 style="margin:0 0 8px 0; font-size:15px; font-weight:600;">Synchronisierung</h3>
+<p style="margin:0 0 14px 0; font-size:12px; color:var(--text-secondary);">Deine Daten sicher speichern</p>
+<div id="sync-status-settings" style="padding:12px; background:var(--bg-soft); border-radius:6px; font-size:12px; margin-bottom:12px;">
+<span id="sync-status-text" style="color:var(--text-secondary);">Nicht verbunden</span>
+</div>
+<div id="sync-actions-settings" style="display:flex; flex-direction:column; gap:8px;">
+<button class="btn" onclick="initiateSyncLogin()" style="width:100%; font-size:12px;">Anmelden</button>
+<button class="btn ghost" onclick="openSyncPanel()" style="width:100%; font-size:12px;">Einstellungen</button>
+</div>
+<div id="sync-logout-section" style="display:none; margin-top:10px;">
+<button class="btn ghost" onclick="initiateSyncLogout()" style="width:100%; font-size:12px; color:var(--error);">Abmelden</button>
+</div>
+</div>
+
+</div>
+<!-- ====================================================
+       TO-DO
+===================================================== -->
+<div class="view" id="view-todo">
+<div class="view-head">
+<div>
+<div class="eyebrow">
+             Aufgaben · Fristen · Projekte
+         </div>
+<h1 class="view-title">
+             Aufgaben
+         </h1>
+</div>
+<button class="btn" onclick="workspaceNewTask()">
+      + Neue Aufgabe
+  </button>
+</div>
+<div class="workspace-bar">
+<div class="workspace-tabs" id="task-range-tabs">
+<button class="workspace-tab active" data-range="week" onclick="workspaceSetRange('week')">
+          Diese Woche
+      </button>
+<button class="workspace-tab" data-range="month" onclick="workspaceSetRange('month')">
+          Diesen Monat
+      </button>
+<button class="workspace-tab" data-range="all" onclick="workspaceSetRange('all')">
+          Alle Aufgaben
+      </button>
+<button class="workspace-tab" data-range="deadlines" onclick="workspaceSetRange('deadlines')">
+          Fristen &amp; Abgaben
+  </button>
+</div>
+<div class="workspace-tools">
+<select class="workspace-filter" id="task-module-filter" onchange="workspaceTaskFilterChanged()"></select>
+<select class="workspace-filter" id="task-status-filter" onchange="workspaceTaskFilterChanged()">
+<option value="all">
+       Alle Status
+      </option>
+<option value="idee">
+       Idee
+      </option>
+<option value="geplant">
+       Geplant
+      </option>
+<option value="bearbeitung">
+       In Bearbeitung
+      </option>
+<option value="erledigt">
+       Erledigt
+      </option>
+</select>
+<select class="workspace-filter" id="task-sort" onchange="workspaceTaskFilterChanged()">
+<option value="deadline">
+             Deadline ↑
+           </option>
+<option value="progress">
+             Fortschritt ↓
+           </option>
+<option value="title">
+             Titel A–Z
+           </option>
+<option value="module">
+             Modul A–Z
+           </option>
+</select>
+<button class="view-kind-btn active" data-display="table" onclick="workspaceSetDisplay('table')">
+           ☷ Tabelle
+       </button>
+<button class="view-kind-btn" data-display="board" onclick="workspaceSetDisplay('board')">
+           ▦ Board
+       </button>
+</div>
+</div>
+<p class="range-note" id="task-range-note"></p>
+<div id="workspace-task-content"></div>
+</div>
+<!-- ====================================================
+          MODULE
+===================================================== -->
+<div class="view" id="view-modules">
+<div class="view-head">
+<div>
+<div class="eyebrow">
+             Fächer &amp; Semester
+           </div>
+<h1 class="view-title">
+             Module
+           </h1>
+</div>
+<button class="btn" onclick="workspaceNewModule()">
+           + Neues Modul
+      </button>
+</div>
+<div class="workspace-bar">
+<div class="workspace-tabs">
+<button class="workspace-tab active">
+             Module dieses Semester
+           </button>
+</div>
+<div class="workspace-tools">
+<span class="range-note" id="module-summary" style="margin:0;"></span>
+</div>
+</div>
+<div class="module-grid" id="module-grid"></div>
+</div>
+<!-- ====================================================
+       KARTEIKARTEN
+===================================================== -->
+<div class="view" id="view-cards">
+<div class="view-head">
+<div>
+<div class="eyebrow">
+             Karteikarten
+        </div>
+<h1 class="view-title">
+          Erstellen &amp; Üben
+        </h1>
+</div>
+</div>
+<div class="fc-mode-switch">
+<button class="fc-mode-btn-item" data-mode="manage" onclick="setFcMode('manage')">
+        Erstellen
+    </button>
+<button class="fc-mode-btn-item" data-mode="study" onclick="setFcMode('study')">
+        Übungsmodus
+    </button>
+<button class="fc-mode-btn-item" data-mode="game" onclick="setFcMode('game')">
+        Spielemodus
+    </button>
+</div>
+<div class="card" id="fc-manage-wrap">
+<div class="fc-create-form">
+<input id="fc-new-front" placeholder="Begriff" type="text"/>
+<input id="fc-new-back" placeholder="Bedeutung" type="text"/>
+<select id="fc-new-folder"></select>
+<button class="btn" onclick="saveNewCard()">
+      Speichern
+  </button>
+</div>
+<div class="fc-tools-row">
+<button class="btn ghost small" onclick="exportCardsCsv()">
+      CSV exportieren
+  </button>
+<label class="btn ghost small" for="card-csv-input">
+        CSV importieren
+    </label>
+<input accept=".csv,text/csv" hidden="" id="card-csv-input" onchange="importCardsCsv(event)" type="file"/>
+</div>
+<div class="folder-row" id="fc-folder-chips" style="justify-content:center;"></div>
+<div class="folder-add" style="justify-content:center;">
+<input id="fc-folder-input" placeholder="Neue Kategorie…" type="text"/>
+<button class="btn ghost small" onclick="addCardFolder()">
+        + Kategorie
+    </button>
+</div>
+<div class="fc-manage-list" id="fc-manage-list"></div>
+</div>
+<div class="card" id="fc-study-wrap" style="display:none;">
+<div class="study-wrap" id="study-content"></div>
+</div>
+<div class="card" id="fc-game-wrap" style="display:none;">
+<div class="study-wrap" id="game-content"></div>
+</div>
+</div>
+<!-- ====================================================
+       STATISTIK
+===================================================== -->
+<div class="view" id="view-stats">
+<div class="view-head">
+<div>
+<div class="eyebrow">
+             Dein Fortschritt
+           </div>
+<h1 class="view-title">
+             Lernstatistik
+           </h1>
+</div>
+<button class="btn ghost small" onclick="resetLearningHistory()">
+           Verlauf zurücksetzen
+      </button>
+</div>
+<div class="stat-grid" id="learning-stat-grid"></div>
+<div class="dash-grid">
+<div class="card">
+<div class="eyebrow">
+             Lernzeit · letzte 7 Tage
+           </div>
+<div class="large-week-chart" id="stats-week-chart"></div>
+</div>
+<div class="card">
+<div class="eyebrow">
+             Nach Fach
+           </div>
+<div id="stats-subjects"></div>
+</div>
+</div>
+</div>
+<!-- ====================================================
+         LERNPLAN
+===================================================== -->
+<div class="view" id="view-planner">
+<div class="view-head">
+<div>
+<div class="eyebrow">Dein persönlicher Lernplan</div>
+<h1 class="view-title">Lernplan</h1>
+<div class="view-sub">Lege selbst fest, was du an welchem Tag lernen möchtest.</div>
+</div>
+</div>
+<div class="planner-layout planner-manual-layout">
+<div class="card planner-entry-card">
+<div class="eyebrow">Lerneinheit eintragen</div>
+<div class="planner-form planner-manual-form">
+<label>
+<span>Datum</span>
+<input id="plan-date" type="date"/>
+</label>
+<label>
+<span>Was möchtest du lernen?</span>
+<input id="plan-title" placeholder="z. B. BWL Kapitel 3" type="text"/>
+</label>
+<label>
+<span>Details</span>
+<textarea id="plan-details" placeholder="z. B. Seiten 40–55 lesen und Zusammenfassung schreiben" rows="4"></textarea>
+</label>
+<label>
+<span>Dauer (optional)</span>
+<input id="plan-duration" min="5" placeholder="z. B. 60" step="5" type="number"/>
+</label>
+<div class="planner-form-actions">
+<button class="btn" id="plan-save-btn" onclick="createStudyPlan()" type="button">+ Eintragen</button>
+<button class="btn ghost" hidden="" id="plan-cancel-edit" onclick="cancelStudyPlanEdit()" type="button">Abbrechen</button>
+</div>
+</div>
+</div>
+<div class="card planner-list-card">
+<div class="card-head-row planner-list-head">
+<div>
+<div class="eyebrow">Dein Plan</div>
+<div class="planner-list-sub">Nach Datum sortiert</div>
+</div>
+<button class="link-btn" onclick="addPlanTasksToTodos()" type="button">Offene Einträge zu To-Do →</button>
+</div>
+<div id="study-plan-list"></div>
+</div>
+</div>
+</div>
+<!-- ====================================================
+       UNTERLAGEN
+===================================================== -->
+<div class="view" id="view-docs">
+<div class="view-head">
+<div>
+<div class="eyebrow">
+             Dateien &amp; Material
+        </div>
+<h1 class="view-title">
+             Unterlagen
+        </h1>
+</div>
+</div>
+<div class="card">
+<div class="doc-upload-row">
+<div class="folder-row" id="doc-folder-chips" style="margin-bottom:0;"></div>
+<label class="btn small" for="doc-file-input" style="cursor:pointer;">
+             + Datei hochladen
+        </label>
+<input id="doc-file-input" onchange="handleDocUpload(event)" style="display:none;" type="file"/>
+<span style="font-size:11.5px; color:var(--ink-faint);">
+                bis 100 MB pro Datei
+           </span>
+</div>
+<div class="folder-add">
+<input id="doc-folder-input" placeholder="Neue Kategorie…" type="text"/>
+<button class="btn ghost small" onclick="addDocFolder()">
+                + Kategorie
+           </button>
+</div>
+<div class="storage-meter" id="storage-meter"></div>
+<div id="doc-list"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- ========================================================
+       MODAL
+========================================================= -->
+<div class="modal-backdrop" hidden="" id="modal-backdrop" onclick="closeModalFromBackdrop(event)">
+<div aria-modal="true" class="modal" id="app-modal" role="dialog"></div>
+</div>
+<!-- ========================================================
+       TOAST
+========================================================= -->
+<div class="toast-wrap" id="toast-wrap"></div>
+<!-- ========================================================
+       SCRIPTS
+========================================================= -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="script.js?v=44&t=20260831"></script>
+<script src="calendar-redesign.js?v=18&t=20260831"></script>
+<script src="sync.js?v=5&t=20260831"></script>
+<script src="settings-panel.js?v=1&t=20260831"></script>
+<script id="dashboard-v3-script">
+(function(){
+  'use strict';
+  function esc(value){
+    const d=document.createElement('div');
+    d.textContent=value == null ? '' : String(value);
+    return d.innerHTML;
+  }
+  function dateObj(value){
+    if(!value) return null;
+    const d = /^\d{4}-\d{2}-\d{2}$/.test(String(value))
+      ? new Date(String(value)+'T00:00:00')
+      : new Date(value);
+    return isNaN(d) ? null : d;
+  }
+  function dateKey(value){
+    const d=dateObj(value); if(!d) return '';
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function todayStart(){ const d=new Date(); d.setHours(0,0,0,0); return d; }
+  function getPlans(){
+    if(typeof studyPlans !== 'undefined' && Array.isArray(studyPlans)) return studyPlans;
+    try{
+      const raw=localStorage.getItem('lernraum_study_plans');
+      const parsed=raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    }catch(e){ return []; }
+  }
+  function renderPlanPreview(){
+    const wrap=document.getElementById('dash-plan-preview');
+    if(!wrap) return;
+    const today=todayStart();
+    const plans=getPlans()
+      .filter(p=>p && !p.done && dateObj(p.date))
+      .filter(p=>{ const d=dateObj(p.date); d.setHours(0,0,0,0); return d>=today; })
+      .sort((a,b)=>String(a.date).localeCompare(String(b.date)))
+      .slice(0,3);
+    if(!plans.length){
+      wrap.innerHTML='<div class="dash-plan-empty"><strong>Noch nichts geplant</strong><span>Trage im Lernplan deine n&auml;chste Lerneinheit ein.</span></div>';
+      return;
+    }
+    wrap.innerHTML=plans.map(p=>{
+      const d=dateObj(p.date);
+      const wd=d.toLocaleDateString('de-DE',{weekday:'short'}).replace('.','');
+      const detail=p.details || (p.duration ? 'ca. '+p.duration+' Min.' : d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}));
+      return '<div class="dash-plan-item">'+
+        '<div class="dash-plan-date"><strong>'+d.getDate()+'</strong><span>'+esc(wd)+'</span></div>'+
+        '<div class="dash-plan-info"><strong>'+esc(p.title || 'Lerneinheit')+'</strong><small>'+esc(detail)+'</small></div>'+
+        (p.time ? '<div class="dash-plan-time">'+esc(p.time)+'</div>' : '')+
+      '</div>';
+    }).join('');
+  }
+  function renderDeadline(){
+    const bar=document.getElementById('dash-deadline-bar');
+    const title=document.getElementById('dash-deadline-title');
+    const meta=document.getElementById('dash-deadline-meta');
+    if(!bar || !title || !meta) return;
+    const todos=(typeof state !== 'undefined' && Array.isArray(state.todos)) ? state.todos : [];
+    const dated=todos.filter(t=>t && !t.done && !t.completed && dateObj(t.dueDate || t.deadline || t.date));
+    dated.sort((a,b)=>dateObj(a.dueDate || a.deadline || a.date)-dateObj(b.dueDate || b.deadline || b.date));
+    const next=dated[0];
+    if(!next){
+      bar.classList.remove('urgent');
+      title.textContent='Keine Deadline geplant';
+      meta.textContent='Du hast aktuell keine offene Aufgabe mit Deadline.';
+      return;
+    }
+    const d=dateObj(next.dueDate || next.deadline || next.date);
+    const day=new Date(d); day.setHours(0,0,0,0);
+    const diff=Math.round((day-todayStart())/86400000);
+    let when='F&auml;llig am '+d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+    if(diff<0) when=Math.abs(diff)+' Tag'+(Math.abs(diff)===1?'':'e')+' &uuml;berf&auml;llig';
+    if(diff===0) when='Heute f&auml;llig';
+    if(diff===1) when='Morgen f&auml;llig';
+    title.textContent=next.text || next.title || next.name || 'Aufgabe';
+    meta.innerHTML=when+(next.priority ? ' &middot; Priorit&auml;t: '+esc(next.priority) : '');
+    bar.classList.toggle('urgent',diff<=1);
+  }
+  function addCalendarDots(){
+    const grid=document.getElementById('dash-cal-grid');
+    if(!grid || typeof dashCalYear==='undefined' || typeof dashCalMonth==='undefined') return;
+    const todos=(typeof state !== 'undefined' && Array.isArray(state.todos)) ? state.todos : [];
+    const taskDates=new Set(todos.filter(t=>t && !t.done).map(t=>dateKey(t.dueDate || t.deadline || t.date)).filter(Boolean));
+    const planDates=new Set(getPlans().filter(p=>p && !p.done).map(p=>dateKey(p.date)).filter(Boolean));
+    grid.querySelectorAll('.dash-cal-extra-dots').forEach(el=>el.remove());
+    grid.querySelectorAll('.mini-cal-day:not(.blank)').forEach(day=>{
+      const n=parseInt(day.childNodes[0] && day.childNodes[0].textContent,10);
+      if(!n) return;
+      const iso=dashCalYear+'-'+String(dashCalMonth+1).padStart(2,'0')+'-'+String(n).padStart(2,'0');
+      const kinds=[];
+      if(taskDates.has(iso)) kinds.push('task');
+      if(planDates.has(iso)) kinds.push('plan');
+      if(!kinds.length) return;
+      const dots=document.createElement('span');
+      dots.className='dash-cal-extra-dots';
+      dots.innerHTML=kinds.map(k=>'<span class="dash-cal-extra-dot '+k+'"></span>').join('');
+      day.appendChild(dots);
+    });
+  }
+  function refresh(){
+    renderPlanPreview();
+    renderDeadline();
+    setTimeout(addCalendarDots,20);
+  }
+  if(typeof renderDashboard==='function'){
+    const original=renderDashboard;
+    window.renderDashboard=function(){
+      const result=original.apply(this,arguments);
+      setTimeout(refresh,0);
+      return result;
+    };
+  }
+  if(typeof dashCalShift==='function'){
+    const originalShift=dashCalShift;
+    window.dashCalShift=function(){
+      const result=originalShift.apply(this,arguments);
+      setTimeout(addCalendarDots,30);
+      return result;
+    };
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',refresh);
+  else refresh();
+})();
+</script>
+<script src="notifications.js"></script>
+</body>
+</html>
