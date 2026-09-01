@@ -18,6 +18,28 @@ let lernraumSyncTimer = null;
 let lernraumSyncIsApplying = false;
 let lernraumLastSyncAt = null;
 
+// Fallback updateSyncStatus wenn settings-panel.js nicht geladen
+function updateSyncStatus() {
+  const user = localStorage.getItem('lernraum_user');
+  const email = localStorage.getItem('lernraum_user_email');
+
+  // Update Settings Panel if exists
+  const statusText = document.getElementById('sync-status-text');
+  if (statusText) {
+    if (user && email) {
+      statusText.textContent = `✅ Angemeldet als ${email}`;
+    } else {
+      statusText.textContent = '❌ Nicht verbunden';
+    }
+  }
+
+  // Update Logout Section
+  const logoutSection = document.getElementById('sync-logout-section');
+  if (logoutSection) {
+    logoutSection.style.display = (user && email) ? 'block' : 'none';
+  }
+}
+
 
 /* =========================================================
    SYNC BUTTON
@@ -125,6 +147,11 @@ function updateLastSyncStatus() {
 ========================================================= */
 
 function openSyncDialog() {
+  // Get current session when opening (non-blocking)
+  supabaseClient.auth.getSession().then(({ data: { session } }) => {
+    lernraumSyncUser = session?.user || null;
+  }).catch(e => console.error('Session check error:', e));
+
   const old = document.getElementById('lernraum-sync-overlay');
 
   if (old) old.remove();
@@ -427,7 +454,18 @@ async function registerLernraum() {
   if (data.session) {
     lernraumSyncUser = data.user;
 
+    // Speichere User in localStorage
+    if (lernraumSyncUser) {
+      localStorage.setItem('lernraum_user', lernraumSyncUser.id);
+      localStorage.setItem('lernraum_user_email', lernraumSyncUser.email);
+    }
+
     updateSyncButton();
+
+    // Update settings panel status
+    if (typeof updateSyncStatus === 'function') {
+      updateSyncStatus();
+    }
 
     await initializeCloudAfterLogin();
 
@@ -481,7 +519,18 @@ async function loginLernraum() {
 
   lernraumSyncUser = data.user;
 
+  // Speichere User in localStorage für settings.js
+  if (lernraumSyncUser) {
+    localStorage.setItem('lernraum_user', lernraumSyncUser.id);
+    localStorage.setItem('lernraum_user_email', lernraumSyncUser.email);
+  }
+
   updateSyncButton();
+
+  // Update settings panel status
+  if (typeof updateSyncStatus === 'function') {
+    updateSyncStatus();
+  }
 
   await initializeCloudAfterLogin();
 
@@ -498,6 +547,10 @@ async function logoutLernraum() {
 
   lernraumSyncUser = null;
   lernraumLastSyncAt = null;
+
+  // Lösche User aus localStorage
+  localStorage.removeItem('lernraum_user');
+  localStorage.removeItem('lernraum_user_email');
 
   updateSyncButton();
 
