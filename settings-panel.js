@@ -22,21 +22,23 @@ function updateSyncStatus() {
   const logoutSection = document.getElementById('sync-logout-section');
   const actionsSection = document.getElementById('sync-actions-settings');
 
-  if (!statusText) return;
-
   // Check if user is logged in (check localStorage or Supabase session)
   const user = localStorage.getItem('lernraum_user');
   const email = localStorage.getItem('lernraum_user_email');
 
-  if (user && email) {
-    statusText.textContent = `✅ Angemeldet als ${email}`;
-    if (logoutSection) logoutSection.style.display = 'block';
-    if (actionsSection) actionsSection.style.display = 'flex';
-  } else {
-    statusText.textContent = '❌ Nicht verbunden';
-    if (logoutSection) logoutSection.style.display = 'none';
-    if (actionsSection) actionsSection.style.display = 'flex';
+  const isLoggedIn = !!(user && email);
+
+  // Update Settings Panel if visible
+  if (statusText) {
+    if (isLoggedIn) {
+      statusText.textContent = `✅ Angemeldet als ${email}`;
+    } else {
+      statusText.textContent = '❌ Nicht verbunden';
+    }
   }
+
+  if (logoutSection) logoutSection.style.display = isLoggedIn ? 'block' : 'none';
+  if (actionsSection) actionsSection.style.display = 'flex';
 }
 
 // Login Flow
