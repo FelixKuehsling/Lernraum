@@ -1087,9 +1087,11 @@ if(typeof init === 'function') {
   window.init = function() {
     origInit();
     calendarTermine();
+    if(typeof renderCalendar === 'function') renderCalendar();
   };
 } else {
   calendarTermine();
+  if(typeof renderCalendar === 'function') renderCalendar();
 }
 </script>
 <script src="notifications.js"></script>
