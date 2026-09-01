@@ -75,14 +75,19 @@ function initializeSettings() {
   updateSettingsThemeToggle();
   updateSyncStatus();
 
-  // Watch for changes
+  // Watch for Dark Mode changes
   const observer = new MutationObserver(() => {
-    updateSyncStatus();
+    updateSettingsThemeToggle();
   });
 
   observer.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ['class']
+  });
+
+  // Watch for localStorage changes (for sync login)
+  window.addEventListener('storage', () => {
+    updateSyncStatus();
   });
 }
 
