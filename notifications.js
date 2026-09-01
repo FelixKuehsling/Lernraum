@@ -35,16 +35,14 @@ function initializeNotifications() {
 
 // Toggle notifications
 function toggleNotifications() {
-  const checkbox = document.getElementById('notif-enable');
-  notificationsEnabled = checkbox.checked;
+  notificationsEnabled = !notificationsEnabled;
 
   if (notificationsEnabled && 'Notification' in window) {
     if (Notification.permission === 'default') {
       Notification.requestPermission().then(perm => {
         if (perm !== 'granted') {
-          checkbox.checked = false;
           notificationsEnabled = false;
-          alert('Benachrichtigungen müssen aktiviert sein');
+          alert('Benachrichtigungen müssen im Browser aktiviert sein');
         }
       });
     }
