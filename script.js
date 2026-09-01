@@ -394,10 +394,7 @@ i++) html += '<div class="mini-cal-day blank"></div>';
 for(let d= 1;
 d<=daysInMonth;
 d++){
-  const iso = `${dashCalYear}
--${String(dashCalMonth+1).padStart(2, '0')}
--${String(d).padStart(2, '0')}
-`;
+  const iso = `${dashCalYear}-${String(dashCalMonth+1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 const isToday = iso === todayISO();
 html += `<div class="mini-cal-day ${isToday? 'today': ''}
 " onclick="goToCalendarDay('${iso}
@@ -986,10 +983,7 @@ function renderMonthGrid(){
   for(let d= 1;
   d<=daysInMonth;
   d++){
-    const iso = `${calYear}
-  -${String(calMonth+1).padStart(2, '0')}
--${String(d).padStart(2, '0')}
-`;
+    const iso = `${calYear}-${String(calMonth+1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 const isToday = iso === todayISO();
 const isSel = iso === selectedDate;
 const count = state.events.filter(e=> e.date===iso).length;
