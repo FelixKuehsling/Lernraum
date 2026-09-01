@@ -453,7 +453,7 @@
     }
     #view-calendar .lr-cal-main{
       min-width:0;
-      overflow:hidden;
+      overflow:visible;
       border-radius:20px;
     }
     /* ========================================================
@@ -525,7 +525,7 @@
       background:
         var(--lr-cal-soft);
       border-radius:11px;
-      overflow:hidden;
+      overflow:visible;
     }
     #view-calendar .cal-view-btn{
       min-width:82px;
@@ -582,7 +582,7 @@
        MONAT
     ======================================================== */
     #view-calendar #cal-month-wrap{
-      overflow:hidden;
+      overflow:visible;
       border-radius:
         0
         0
@@ -602,7 +602,7 @@
           minmax(110px,1fr)
         );
       min-height:660px;
-      overflow:hidden;
+      overflow:visible;
       border-radius:
         0
         0
@@ -625,7 +625,7 @@
         1px solid
         var(--lr-cal-line);
       cursor:pointer;
-      overflow:hidden;
+      overflow:visible;
     }
     #view-calendar
     .lr-cal-day:nth-child(7n){
@@ -722,7 +722,7 @@
       border:0;
       border-radius:8px;
       text-align:left;
-      overflow:hidden;
+      overflow:visible;
       cursor:pointer;
       font-family:
         'Karla',
@@ -736,7 +736,7 @@
       font-size:9px;
       font-weight:800;
       white-space:nowrap;
-      overflow:hidden;
+      overflow:visible;
       text-overflow:
         ellipsis;
     }
@@ -757,7 +757,7 @@
       font-size:10px;
       font-weight:700;
       line-height:1.2;
-      overflow:hidden;
+      overflow:visible;
       text-overflow:
         ellipsis;
       white-space:nowrap;
@@ -1011,7 +1011,7 @@
     #view-calendar .lr-today-title{
       font-size:11px;
       font-weight:800;
-      overflow:hidden;
+      overflow:visible;
       text-overflow:
         ellipsis;
       white-space:nowrap;
@@ -1108,7 +1108,7 @@
         1px solid
         var(--lr-cal-line);
       border-radius:14px;
-      overflow:hidden;
+      overflow:visible;
       background:#fcf7ee;
     }
     #view-calendar
@@ -1179,7 +1179,7 @@
         var(--lr-cal-line);
       background:#fcf7ee;
       cursor:pointer;
-      overflow:hidden;
+      overflow:visible;
     }
     #view-calendar
     .lr-time-slot:hover{
@@ -1200,7 +1200,7 @@
         5px
         7px;
       border-radius:7px;
-      overflow:hidden;
+      overflow:visible;
       font-size:10px;
       font-weight:800;
       line-height:1.2;
