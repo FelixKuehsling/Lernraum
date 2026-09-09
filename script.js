@@ -4010,7 +4010,7 @@ function getModuleData(moduleId){
     todos: state.todos.filter(item => item.moduleId === moduleId),
     cards: state.cards.filter(item => item.moduleId === moduleId),
     events: state.events.filter(item => item.moduleId === moduleId),
-    docs: state.docs.filter(item => item.moduleId === moduleId)
+    docs: state.docs.filter(item => item.folderId === moduleId)
   };
 }
 
