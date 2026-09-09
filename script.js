@@ -1920,15 +1920,6 @@ document.addEventListener('keydown', (e)=> {
   }
 }
 );
-function renderDocFolderChips(){
-  const wrap = document.getElementById('doc-folder-chips');
-  const options = [{ id: 'alle', name: 'Alle Module' }, ...(Array.isArray(modules) ? modules : [])];
-  wrap.innerHTML = `
-    <select class="doc-module-filter" onchange="setDocFolderFilter(this.value)" style="padding:8px 12px; border:1px solid var(--line); border-radius:8px; background:var(--bg-soft); color:var(--ink); font-weight:600; cursor:pointer;">
-      ${options.map(m => `<option value="${escapeHtml(m.id)}" ${docFolderFilter===m.id ? 'selected' : ''}>${escapeHtml(m.name || m.title || 'Ohne Namen')}</option>`).join('')}
-    </select>
-  `;
-}
 function setDocFolderFilter(id){
   docFolderFilter = id;
   renderDocFolderChips();
