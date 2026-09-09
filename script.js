@@ -4002,7 +4002,8 @@ function getModuleData(moduleId){
     todos: state.todos.filter(item => item.moduleId === moduleId),
     cards: state.cards.filter(item => item.moduleId === moduleId),
     events: state.events.filter(item => item.moduleId === moduleId),
-    docs: state.docs.filter(item => item.folderId === moduleId)
+    docs: state.docs.filter(item => item.folderId === moduleId),
+    studyPlans: (Array.isArray(studyPlans) ? studyPlans : []).filter(item => item.moduleId === moduleId)
   };
 }
 
@@ -4423,6 +4424,11 @@ function workspaceOpenModule(moduleId){
         <button onclick="openModuleArea('${module.id}','docs')">
           <strong>${data.docs.length}</strong>
           <span>Dateien</span>
+        </button>
+
+        <button onclick="openModuleArea('${module.id}','learningplan')">
+          <strong>${data.studyPlans ? data.studyPlans.length : 0}</strong>
+          <span>Lernplan</span>
         </button>
       </div>
 
