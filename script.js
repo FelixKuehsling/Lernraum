@@ -4560,13 +4560,17 @@ function workspaceOpenModule(moduleId){
           <div class="lr-module-list">
             ${
               data.docs.length
-                ? data.docs.slice(0, 8).map(doc => `
-                    <div class="lr-module-row">
-                      <span>↥</span>
-                      <span>${escapeHtml(doc.name)}</span>
-                      <small>${fmtBytes(doc.size || 0)}</small>
+                ? `<div class="lr-module-row" style="display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--line); border-radius:8px; background:var(--bg-soft);">
+                    <span style="font-size:20px;">📄</span>
+                    <div style="flex:1;">
+                      <strong>${data.docs.length} ${data.docs.length === 1 ? 'Datei' : 'Dateien'}</strong>
+                      <small style="display:block; color:var(--ink-soft); margin-top:2px;">
+                        <button onclick="closeModal();activateView('docs')" style="background:none; border:none; color:var(--sage); text-decoration:underline; cursor:pointer; padding:0; font:inherit;">
+                          → Zu Unterlagen
+                        </button>
+                      </small>
                     </div>
-                  `).join('')
+                  </div>`
                 : `<div class="lr-module-empty">Noch keine Unterlagen.</div>`
             }
           </div>
