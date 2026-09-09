@@ -1916,24 +1916,54 @@ document.addEventListener('keydown', (e)=> {
 );
 function renderDocFolderChips(){
   const wrap = document.getElementById('doc-folder-chips');
-  const chips = [{
-    id: 'alle', name: 'Alle'}
-  , ...state.docFolders];
-  wrap.innerHTML = chips.map(f => `
-    <button class="folder-chip ${docFolderFilter===f.id? 'active': ''}
-" onclick="setDocFolderFilter('${f.id}
-')">
-      ${escapeHtml(f.name)}
-${(f.id!=='alle' && f.id!=='ohne') ? `<span class="del-x" onclick="event.stopPropagation(); deleteDocFolder('${f.id}
-')">\u2715</span>` : ''}
+  if(!wrap) return;
 
-    </button>`).join('');
+  const chips = [
+    { id: 'alle', name: 'Alle' },
+    ...state.docFolders
+  ];
+
+  wrap.innerHTML = chips.map(folder => `
+    <button
+      type="button"
+      class="folder-chip ${docFolderFilter === folder.id ? 'active' : ''}"
+      data-doc-folder="${escapeHtml(folder.id)}"
+    >
+      ${escapeHtml(folder.name)}
+      ${
+        folder.id !== 'alle' && folder.id !== 'ohne'
+          ? `<span
+               class="del-x"
+               data-doc-delete-folder="${escapeHtml(folder.id)}"
+               title="Kategorie löschen"
+             >✕</span>`
+          : ''
+      }
+    </button>
+  `).join('');
+
+  wrap.querySelectorAll('[data-doc-folder]').forEach(button => {
+    button.addEventListener('click', event => {
+      if(event.target.closest('[data-doc-delete-folder]')) return;
+      setDocFolderFilter(button.dataset.docFolder);
+    });
+  });
+
+  wrap.querySelectorAll('[data-doc-delete-folder]').forEach(button => {
+    button.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      deleteDocFolder(button.dataset.docDeleteFolder);
+    });
+  });
 }
+
 function setDocFolderFilter(id){
-  docFolderFilter = id;
+  docFolderFilter = String(id || 'alle').trim();
   renderDocFolderChips();
   renderDocList();
 }
+
 async function addDocFolder(){
   const input = document.getElementById('doc-folder-input');
   const name = input.value.trim();
