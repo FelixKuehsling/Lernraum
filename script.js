@@ -1916,54 +1916,24 @@ document.addEventListener('keydown', (e)=> {
 );
 function renderDocFolderChips(){
   const wrap = document.getElementById('doc-folder-chips');
-  if(!wrap) return;
+  const chips = [{
+    id: 'alle', name: 'Alle'}
+  , ...state.docFolders];
+  wrap.innerHTML = chips.map(f => `
+    <button class="folder-chip ${docFolderFilter===f.id? 'active': ''}
+" onclick="setDocFolderFilter('${f.id}
+')">
+      ${escapeHtml(f.name)}
+${(f.id!=='alle' && f.id!=='ohne') ? `<span class="del-x" onclick="event.stopPropagation(); deleteDocFolder('${f.id}
+')">\u2715</span>` : ''}
 
-  const chips = [
-    { id: 'alle', name: 'Alle' },
-    ...state.docFolders
-  ];
-
-  wrap.innerHTML = chips.map(folder => `
-    <button
-      type="button"
-      class="folder-chip ${docFolderFilter === folder.id ? 'active' : ''}"
-      data-doc-folder="${escapeHtml(folder.id)}"
-    >
-      ${escapeHtml(folder.name)}
-      ${
-        folder.id !== 'alle' && folder.id !== 'ohne'
-          ? `<span
-               class="del-x"
-               data-doc-delete-folder="${escapeHtml(folder.id)}"
-               title="Kategorie löschen"
-             >✕</span>`
-          : ''
-      }
-    </button>
-  `).join('');
-
-  wrap.querySelectorAll('[data-doc-folder]').forEach(button => {
-    button.addEventListener('click', event => {
-      if(event.target.closest('[data-doc-delete-folder]')) return;
-      setDocFolderFilter(button.dataset.docFolder);
-    });
-  });
-
-  wrap.querySelectorAll('[data-doc-delete-folder]').forEach(button => {
-    button.addEventListener('click', event => {
-      event.preventDefault();
-      event.stopPropagation();
-      deleteDocFolder(button.dataset.docDeleteFolder);
-    });
-  });
+    </button>`).join('');
 }
-
 function setDocFolderFilter(id){
-  docFolderFilter = String(id || 'alle').trim();
+  docFolderFilter = id;
   renderDocFolderChips();
   renderDocList();
 }
-
 async function addDocFolder(){
   const input = document.getElementById('doc-folder-input');
   const name = input.value.trim();
@@ -6679,4 +6649,164 @@ function answerGameFixed(chosen) {
       return result;
     };
   }
+})();
+
+/* ============================================================
+   FINAL FIX – UNTERLAGEN-KATEGORIEN
+   Filtern + Löschen stabil, ohne Inline-onclick.
+============================================================ */
+(function installFinalDocCategoryFix(){
+  'use strict';
+
+  function cleanDocId(value){
+    return String(value ?? '').trim();
+  }
+
+  window.setDocFolderFilter = function(id){
+    docFolderFilter = cleanDocId(id) || 'alle';
+    renderDocFolderChips();
+    renderDocList();
+  };
+
+  window.getFilteredDocs = function(){
+    const q = String(window.lrDocSearchQuery || '').trim().toLowerCase();
+    const activeFolder = cleanDocId(docFolderFilter) || 'alle';
+
+    return state.docs.filter(doc => {
+      const folderId = cleanDocId(doc.folderId);
+
+      const folderOk =
+        activeFolder === 'alle'
+          ? true
+          : activeFolder === 'ohne'
+            ? !folderId
+            : folderId === activeFolder;
+
+      const searchOk =
+        !q || String(doc.name || '').toLowerCase().includes(q);
+
+      return folderOk && searchOk;
+    });
+  };
+
+  window.renderDocFolderChips = function(){
+    const wrap = document.getElementById('doc-folder-chips');
+    if(!wrap) return;
+
+    const activeFolder = cleanDocId(docFolderFilter) || 'alle';
+    const chips = [
+      { id: 'alle', name: 'Alle' },
+      ...state.docFolders
+    ];
+
+    wrap.innerHTML = chips.map(folder => {
+      const id = cleanDocId(folder.id);
+      const active = activeFolder === id;
+
+      return `
+        <button
+          type="button"
+          class="folder-chip ${active ? 'active' : ''}"
+          data-doc-folder-id="${escapeHtml(id)}"
+        >
+          <span>${escapeHtml(folder.name)}</span>
+          ${
+            id !== 'alle' && id !== 'ohne'
+              ? `<span
+                   class="del-x"
+                   role="button"
+                   tabindex="0"
+                   aria-label="Kategorie löschen"
+                   title="Kategorie löschen"
+                   data-doc-folder-delete="${escapeHtml(id)}"
+                 >✕</span>`
+              : ''
+          }
+        </button>
+      `;
+    }).join('');
+  };
+
+  window.deleteDocFolder = async function(id){
+    const folderId = cleanDocId(id);
+    const folder = state.docFolders.find(
+      item => cleanDocId(item.id) === folderId
+    );
+
+    if(!folder) return;
+
+    const ok = window.confirm(
+      `Kategorie "${folder.name}" löschen? Die Unterlagen bleiben erhalten.`
+    );
+    if(!ok) return;
+
+    state.docFolders = state.docFolders.filter(
+      item => cleanDocId(item.id) !== folderId
+    );
+
+    state.docs.forEach(doc => {
+      if(cleanDocId(doc.folderId) === folderId){
+        doc.folderId = null;
+      }
+    });
+
+    if(cleanDocId(docFolderFilter) === folderId){
+      docFolderFilter = 'alle';
+    }
+
+    await Promise.all([
+      save('lernraum_doc_folders', state.docFolders),
+      save('lernraum_docs_index', state.docs)
+    ]);
+
+    renderDocFolderChips();
+    renderDocList();
+
+    if(typeof notify === 'function'){
+      notify('Kategorie gelöscht.');
+    }
+  };
+
+  document.addEventListener('click', function(event){
+    const deleteButton = event.target.closest('[data-doc-folder-delete]');
+    if(deleteButton){
+      event.preventDefault();
+      event.stopPropagation();
+      deleteDocFolder(deleteButton.dataset.docFolderDelete);
+      return;
+    }
+
+    const folderButton = event.target.closest('[data-doc-folder-id]');
+    if(folderButton){
+      event.preventDefault();
+      setDocFolderFilter(folderButton.dataset.docFolderId);
+    }
+  }, true);
+
+  document.addEventListener('keydown', function(event){
+    if(event.key !== 'Enter' && event.key !== ' ') return;
+
+    const deleteButton = event.target.closest('[data-doc-folder-delete]');
+    if(!deleteButton) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    deleteDocFolder(deleteButton.dataset.docFolderDelete);
+  }, true);
+
+  function refreshDocCategoryUi(){
+    renderDocFolderChips();
+    renderDocList();
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', refreshDocCategoryUi, { once:true });
+  }else{
+    refreshDocCategoryUi();
+  }
+
+  setTimeout(refreshDocCategoryUi, 300);
+  setTimeout(refreshDocCategoryUi, 1000);
+
+  console.log('Lernraum: Unterlagen-Kategorie-Fix aktiv');
 })();
