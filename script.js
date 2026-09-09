@@ -1922,10 +1922,12 @@ document.addEventListener('keydown', (e)=> {
 );
 function renderDocFolderChips(){
   const wrap = document.getElementById('doc-folder-chips');
-  const chips = [{
-    id: 'alle', name: 'Alle'}
-  , ...state.docFolders];
-  wrap.innerHTML = chips.map(f => `<button class="folder-chip ${docFolderFilter===f.id? 'active': ''}" onclick="setDocFolderFilter('${f.id}')">${escapeHtml(f.name)}${(f.id!=='alle' && f.id!=='ohne') ? `<span class="del-x" onclick="event.stopPropagation(); deleteDocFolder('${f.id}')">\u2715</span>` : ''}</button>`).join('');
+  const options = [{ id: 'alle', name: 'Alle Module' }, ...(Array.isArray(modules) ? modules : [])];
+  wrap.innerHTML = `
+    <select class="doc-module-filter" onchange="setDocFolderFilter(this.value)" style="padding:8px 12px; border:1px solid var(--line); border-radius:8px; background:var(--bg-soft); color:var(--ink); font-weight:600; cursor:pointer;">
+      ${options.map(m => `<option value="${escapeHtml(m.id)}" ${docFolderFilter===m.id ? 'selected' : ''}>${escapeHtml(m.name || m.title || 'Ohne Namen')}</option>`).join('')}
+    </select>
+  `;
 }
 function setDocFolderFilter(id){
   docFolderFilter = id;
@@ -6693,37 +6695,24 @@ function answerGameFixed(chosen) {
     if(!wrap) return;
 
     const activeFolder = cleanDocId(docFolderFilter) || 'alle';
-    const chips = [
-      { id: 'alle', name: 'Alle' },
-      ...state.docFolders
+    const options = [
+      { id: 'alle', name: 'Alle Module' },
+      ...(Array.isArray(modules) ? modules : [])
     ];
 
-    wrap.innerHTML = chips.map(folder => {
-      const id = cleanDocId(folder.id);
-      const active = activeFolder === id;
-
-      return `
-        <button
-          type="button"
-          class="folder-chip ${active ? 'active' : ''}"
-          data-doc-folder-id="${escapeHtml(id)}"
-        >
-          <span>${escapeHtml(folder.name)}</span>
-          ${
-            id !== 'alle' && id !== 'ohne'
-              ? `<span
-                   class="del-x"
-                   role="button"
-                   tabindex="0"
-                   aria-label="Kategorie löschen"
-                   title="Kategorie löschen"
-                   data-doc-folder-delete="${escapeHtml(id)}"
-                 >✕</span>`
-              : ''
-          }
-        </button>
-      `;
-    }).join('');
+    wrap.innerHTML = `
+      <select
+        class="doc-module-filter"
+        onchange="setDocModuleFilter(this.value)"
+        style="padding:8px 12px; border:1px solid var(--line); border-radius:8px; background:var(--bg-soft); color:var(--ink); font-weight:600; cursor:pointer;"
+      >
+        ${options.map(mod => `
+          <option value="${escapeHtml(mod.id)}" ${activeFolder === cleanDocId(mod.id) ? 'selected' : ''}>
+            ${escapeHtml(mod.name || mod.title || 'Ohne Namen')}
+          </option>
+        `).join('')}
+      </select>
+    `;
   };
 
   window.deleteDocFolder = async function(id){
