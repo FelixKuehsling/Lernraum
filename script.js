@@ -2278,8 +2278,8 @@ function renderDocList(){
           aria-label="Zu Modul hinzufügen"
         >
           <option value="">Zu Modul hinzufügen</option>
-          ${state.docFolders.map(f => `
-            <option value="${f.id}" ${doc.folderId === f.id ? 'selected' : ''}>${escapeHtml(f.name)}</option>
+          ${(typeof modules !== 'undefined' && Array.isArray(modules) ? modules : []).map(m => `
+            <option value="${m.id}" ${doc.folderId === m.id ? 'selected' : ''}>${escapeHtml(m.name || m.title || '')}</option>
           `).join('')}
         </select>
 
