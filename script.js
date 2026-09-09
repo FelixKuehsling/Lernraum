@@ -4565,7 +4565,7 @@ function workspaceOpenModule(moduleId){
                     <div style="flex:1;">
                       <strong>${data.docs.length} ${data.docs.length === 1 ? 'Datei' : 'Dateien'}</strong>
                       <small style="display:block; color:var(--ink-soft); margin-top:2px;">
-                        <button onclick="closeModal();activateView('docs')" style="background:none; border:none; color:var(--sage); text-decoration:underline; cursor:pointer; padding:0; font:inherit;">
+                        <button onclick="openModuleDocuments('${module.id}')" style="background:none; border:none; color:var(--sage); text-decoration:underline; cursor:pointer; padding:0; font:inherit;">
                           → Zu Unterlagen
                         </button>
                       </small>
@@ -4595,6 +4595,14 @@ function workspaceOpenModule(moduleId){
 
     </div>
   `);
+}
+
+function openModuleDocuments(moduleId){
+  closeModal();
+  docFolderFilter = moduleId;
+  activateView('docs');
+  if(typeof renderDocFolderChips === 'function') renderDocFolderChips();
+  if(typeof renderDocList === 'function') renderDocList();
 }
 
 function openModuleArea(moduleId, view){
