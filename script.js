@@ -6806,5 +6806,19 @@ function answerGameFixed(chosen) {
   setTimeout(refreshDocCategoryUi, 300);
   setTimeout(refreshDocCategoryUi, 1000);
 
+  // Hide document category creation UI
+  const hideDocCategoryCreation = () => {
+    const folderAdd = document.querySelector('#view-docs .folder-add');
+    if(folderAdd) {
+      folderAdd.style.display = 'none !important';
+      folderAdd.style.visibility = 'hidden';
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', hideDocCategoryCreation);
+  setTimeout(hideDocCategoryCreation, 100);
+  setTimeout(hideDocCategoryCreation, 300);
+  setTimeout(hideDocCategoryCreation, 1000);
+
   console.log('Lernraum: Unterlagen-Kategorie-Fix aktiv');
 })();
