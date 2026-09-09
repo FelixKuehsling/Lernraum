@@ -4574,11 +4574,11 @@ function workspaceOpenModule(moduleId){
           </div>
         </section>
 
-        <section class="lr-module-section lr-module-section-wide">
+        <section class="lr-module-section">
           <div class="lr-module-section-head">
             <div>
               <div class="eyebrow">Lernplan</div>
-              <h4>Lerneinheiten</h4>
+              <h4>Einheiten</h4>
             </div>
           </div>
 
