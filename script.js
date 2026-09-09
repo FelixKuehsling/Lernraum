@@ -1614,9 +1614,9 @@ function setFcMode(mode){
   if(gameWrap) gameWrap.style.display = mode === 'game' ? 'block' : 'none';
 
   stopGameTimer();
+  renderFcFolderChips();
 
   if(mode === 'manage'){
-    renderFcFolderChips();
     renderFcManage();
   }else if(mode === 'study'){
     renderStudySetup();
