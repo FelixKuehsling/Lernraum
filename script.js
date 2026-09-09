@@ -1949,14 +1949,6 @@ async function deleteDocFolder(id){
   renderDocFolderChips();
   renderDocList();
 }
-function getFilteredDocs(){
-  const q=(window.lrDocSearchQuery||'').trim().toLowerCase();
-  return state.docs.filter(doc=>{
-    const folderOk=docFolderFilter==='alle'?true:docFolderFilter==='ohne'?!doc.folderId:doc.folderId===docFolderFilter;
-    const searchOk=!q||(doc.name||'').toLowerCase().includes(q);
-    return folderOk&&searchOk;
-  });
-}
 function fmtBytes(n){
   if(n < 1024) return n + ' B';
   if(n < 1024* 1024) return (n/ 1024).toFixed(0) + ' KB';
