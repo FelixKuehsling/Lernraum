@@ -2274,10 +2274,10 @@ function renderDocList(){
         <select
           class="lr-doc-category"
           onchange="updateDocFolder('${doc.id}', this.value || null)"
-          title="Kategorie"
-          aria-label="Kategorie"
+          title="Zu Modul hinzufügen"
+          aria-label="Zu Modul hinzufügen"
         >
-          <option value="">Kategorie</option>
+          <option value="">Zu Modul hinzufügen</option>
           ${state.docFolders.map(f => `
             <option value="${f.id}" ${doc.folderId === f.id ? 'selected' : ''}>${escapeHtml(f.name)}</option>
           `).join('')}
