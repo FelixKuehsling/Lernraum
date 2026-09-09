@@ -4574,6 +4574,29 @@ function workspaceOpenModule(moduleId){
           </div>
         </section>
 
+        <section class="lr-module-section lr-module-section-wide">
+          <div class="lr-module-section-head">
+            <div>
+              <div class="eyebrow">Lernplan</div>
+              <h4>Lerneinheiten</h4>
+            </div>
+          </div>
+
+          <div class="lr-module-list">
+            ${
+              data.studyPlans && data.studyPlans.length
+                ? data.studyPlans.slice(0, 8).map(plan => `
+                    <div class="lr-module-row">
+                      <span>📅</span>
+                      <span>${escapeHtml(plan.name || plan.title || 'Ohne Namen')}</span>
+                      ${plan.date ? `<small>${new Date(plan.date).toLocaleDateString('de-DE')}</small>` : ''}
+                    </div>
+                  `).join('')
+                : `<div class="lr-module-empty">Noch keine Lerneinheiten geplant.</div>`
+            }
+          </div>
+        </section>
+
       </div>
 
       <div class="modal-actions lr-module-actions">
