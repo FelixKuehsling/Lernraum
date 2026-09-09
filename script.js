@@ -1336,7 +1336,13 @@ function renderFcFolderChips(){
 function setFcFolderFilter(id){
   fcFolderFilter = id || 'alle';
   renderFcFolderChips();
-  renderFcManage();
+  if(fcMode === 'manage'){
+    renderFcManage();
+  }else if(fcMode === 'study'){
+    renderStudySetup();
+  }else if(fcMode === 'game'){
+    startGame();
+  }
 }
 
 async function addCardFolder(){
