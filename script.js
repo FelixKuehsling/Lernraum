@@ -1991,6 +1991,7 @@ async function init(){
   state.noteFolders = await safeGet('lernraum_note_folders', []);
   modules = await safeGet('lernraum_modules', []);
   if(!Array.isArray(modules)) modules = [];
+  await restoreModulesBackupIfNeeded();
   loadTaskUi();
   state.todos.forEach(normalizeTask);
   selectedNoteId = state.notes[0]?.id || null;
