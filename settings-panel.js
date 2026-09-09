@@ -37,8 +37,8 @@ function updateSyncStatus() {
     }
   }
 
-  if (logoutSection) logoutSection.style.display = isLoggedIn ? 'block' : 'none';
-  if (actionsSection) actionsSection.style.display = 'flex';
+  if (logoutSection) logoutSection.style.display = isLoggedIn ? 'flex' : 'none';
+  if (actionsSection) actionsSection.style.display = isLoggedIn ? 'none' : 'flex';
 }
 
 // Login Flow
