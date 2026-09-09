@@ -4547,7 +4547,7 @@ function workspaceOpenModule(moduleId){
           </div>
         </section>
 
-        <section class="lr-module-section lr-module-section-wide">
+        <section class="lr-module-section">
           <div class="lr-module-section-head">
             <div>
               <div class="eyebrow">Unterlagen</div>
