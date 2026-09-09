@@ -6709,7 +6709,7 @@ function answerGameFixed(chosen) {
     wrap.innerHTML = `
       <select
         class="doc-module-filter"
-        onchange="setDocModuleFilter(this.value)"
+        onchange="setDocFolderFilter(this.value)"
         style="padding:8px 12px; border:1px solid var(--line); border-radius:8px; background:var(--bg-soft); color:var(--ink); font-weight:600; cursor:pointer;"
       >
         ${options.map(mod => `
