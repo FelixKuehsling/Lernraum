@@ -3029,6 +3029,7 @@ activateView= function(view){
   const fileInput= document.getElementById('doc-file-input');
   if(fileInput)fileInput.multiple= true;
   renderAllEnhanced();
+  if(typeof renderDocFolderChips === 'function') renderDocFolderChips();
 }
 )();
 let lernraumInstallPrompt = null;
