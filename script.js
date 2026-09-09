@@ -6583,9 +6583,7 @@ function answerGameFixed(chosen) {
     const elapsed = Math.max(0, Math.min(2, (now - lastTickAt) / 1000));
     lastTickAt = now;
 
-    const idle = now - lastActivityAt >= IDLE_LIMIT_MS;
-
-    if(!document.hidden && active && !idle){
+    if(!document.hidden && active){
       addActiveSeconds(elapsed);
     }
 
