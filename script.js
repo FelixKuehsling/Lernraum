@@ -4601,8 +4601,10 @@ function openModuleDocuments(moduleId){
   closeModal();
   docFolderFilter = moduleId;
   activateView('docs');
-  if(typeof renderDocFolderChips === 'function') renderDocFolderChips();
-  if(typeof renderDocList === 'function') renderDocList();
+  setTimeout(() => {
+    if(typeof renderDocFolderChips === 'function') renderDocFolderChips();
+    if(typeof renderDocList === 'function') renderDocList();
+  }, 100);
 }
 
 function openModuleArea(moduleId, view){
