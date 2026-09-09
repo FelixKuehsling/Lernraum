@@ -1919,15 +1919,7 @@ function renderDocFolderChips(){
   const chips = [{
     id: 'alle', name: 'Alle'}
   , ...state.docFolders];
-  wrap.innerHTML = chips.map(f => `
-    <button class="folder-chip ${docFolderFilter===f.id? 'active': ''}
-" onclick="setDocFolderFilter('${f.id}
-')">
-      ${escapeHtml(f.name)}
-${(f.id!=='alle' && f.id!=='ohne') ? `<span class="del-x" onclick="event.stopPropagation(); deleteDocFolder('${f.id}
-')">\u2715</span>` : ''}
-
-    </button>`).join('');
+  wrap.innerHTML = chips.map(f => `<button class="folder-chip ${docFolderFilter===f.id? 'active': ''}" onclick="setDocFolderFilter('${f.id}')">${escapeHtml(f.name)}${(f.id!=='alle' && f.id!=='ohne') ? `<span class="del-x" onclick="event.stopPropagation(); deleteDocFolder('${f.id}')">\u2715</span>` : ''}</button>`).join('');
 }
 function setDocFolderFilter(id){
   docFolderFilter = id;
