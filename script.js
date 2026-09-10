@@ -4603,15 +4603,6 @@ function workspaceOpenModule(moduleId){
         <button class="btn ghost" onclick="workspaceEditModule('${module.id}')">
           Modul bearbeiten
         </button>
-
-        <span style="flex:1"></span>
-
-        <button
-          class="btn"
-          onclick="closeModal();workspaceNewTask('geplant','${module.id}')"
-        >
-          + Aufgabe
-        </button>
       </div>
 
     </div>
