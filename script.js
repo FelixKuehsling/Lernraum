@@ -4440,13 +4440,6 @@ function workspaceOpenModule(moduleId){
               <div class="eyebrow">Aufgaben</div>
               <h4>Offen</h4>
             </div>
-
-            <button
-              class="link-btn"
-              onclick="closeModal();workspaceNewTask('geplant','${module.id}')"
-            >
-              + Aufgabe
-            </button>
           </div>
 
           <div class="lr-module-list">
