@@ -2001,11 +2001,13 @@ async function init(){
   initCalendar();
   renderDashboard();
   renderNoteFolderChips();
+  renderNoteModuleFilter();
   renderNotesList();
   renderTodos();
   renderModules();
   renderCalendar();
   renderFlashcards();
+  renderFlashcardModuleFilter();
   renderDocFolderChips();
   renderDocList();
   document.querySelectorAll('.fc-mode-btn-item').forEach(b=> b.classList.toggle('active',
