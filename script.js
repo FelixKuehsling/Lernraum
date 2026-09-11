@@ -4493,22 +4493,17 @@ function workspaceOpenModule(moduleId){
           <div class="lr-module-list">
             ${
               openTasks.length
-                ? openTasks.slice(0, 6).map(task => `
-                    <div class="lr-module-row">
-                      <button
-                        class="db-check ${task.done ? 'done' : ''}"
-                        onclick="workspaceToggleTask('${task.id}')"
-                      ></button>
-
-                      <span>${escapeHtml(task.text)}</span>
-
-                      ${
-                        task.deadline
-                          ? `<small>${fmtDateShort(task.deadline)}</small>`
-                          : ''
-                      }
+                ? `<div class="lr-module-row" style="display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--line); border-radius:8px; background:var(--bg-soft);">
+                    <span style="font-size:20px;">✓</span>
+                    <div style="flex:1;">
+                      <strong>${openTasks.length} ${openTasks.length === 1 ? 'Aufgabe' : 'Aufgaben'}</strong>
+                      <small style="display:block; color:var(--ink-soft); margin-top:2px;">
+                        <button onclick="openModuleAufgaben('${module.id}')" style="background:none; border:none; color:var(--sage); text-decoration:underline; cursor:pointer; padding:0; font:inherit;">
+                          → Zu Aufgaben
+                        </button>
+                      </small>
                     </div>
-                  `).join('')
+                  </div>`
                 : `<div class="lr-module-empty">Noch keine offenen Aufgaben.</div>`
             }
           </div>
@@ -4698,6 +4693,15 @@ function openModuleNotes(moduleId){
     if(typeof renderNoteModuleFilter === 'function') renderNoteModuleFilter();
     if(typeof renderNotesList === 'function') renderNotesList();
   }, 100);
+}
+
+function openModuleAufgaben(moduleId){
+  closeModal();
+  taskModuleFilter = moduleId;
+  taskRange = 'all';
+  saveTaskUi();
+  activateView('todo');
+  renderTodos();
 }
 
 function openModuleArea(moduleId, view){
