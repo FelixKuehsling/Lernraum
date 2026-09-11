@@ -4378,7 +4378,7 @@ function workspaceOpenModule(moduleId){
     );
 
   openModal(`
-    <div class="module-workspace lr-module-center">
+    <div class="module-workspace lr-module-center" style="position:relative;">
 
       <div class="modal-head">
         <div class="module-detail-head">
