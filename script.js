@@ -1409,6 +1409,11 @@ function getFilteredCardIndices(){
     .filter(index => {
       const card = state.cards[index];
 
+      if(fcModuleFilter) {
+        if(fcModuleFilter === 'alle') return true;
+        return card.folderId === fcModuleFilter;
+      }
+
       if(fcFolderFilter === 'alle') return true;
       if(fcFolderFilter === 'ohne') return !card.folderId;
 
@@ -1471,14 +1476,14 @@ function renderFcManage(){
         <select
           data-card-field="folderId"
           data-card-id="${escapeHtml(card.id)}"
-          aria-label="Kategorie"
+          aria-label="Modul"
         >
-          <option value="" ${!card.folderId ? 'selected' : ''}>Ohne Kategorie</option>
-          ${state.cardFolders.map(folder => `
+          <option value="" ${!card.folderId ? 'selected' : ''}>Alle Module</option>
+          ${(Array.isArray(modules) ? modules : []).map(mod => `
             <option
-              value="${escapeHtml(folder.id)}"
-              ${card.folderId === folder.id ? 'selected' : ''}
-            >${escapeHtml(folder.name)}</option>
+              value="${escapeHtml(mod.id)}"
+              ${card.folderId === mod.id ? 'selected' : ''}
+            >${escapeHtml(mod.name || mod.title || 'Ohne Namen')}</option>
           `).join('')}
         </select>
 
