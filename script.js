@@ -255,8 +255,10 @@ function activateView(view){
   viewEl.classList.add('active');
   viewEl.scrollIntoView({behavior: 'smooth', block: 'start'});
   if(view === 'dashboard') renderDashboard();
+  if(view === 'notes') { renderNoteModuleFilter(); renderNotesList(); }
   if(view === 'todo') renderTodos();
   if(view === 'modules') renderModules();
+  if(view === 'cards') { renderFlashcardModuleFilter(); renderFlashcards(); }
   if(view !== 'cards'){
     stopGameTimer();
   }
@@ -1925,6 +1927,18 @@ function setDocFolderFilter(id){
   renderDocFolderChips();
   renderDocList();
 }
+
+window.setNoteModuleFilter = function(id){
+  noteModuleFilter = id;
+  renderNoteModuleFilter();
+  renderNoteList();
+};
+
+window.setFlashcardModuleFilter = function(id){
+  fcModuleFilter = id;
+  renderFlashcardModuleFilter();
+  renderFlashcardList();
+};
 async function addDocFolder(){
   const input = document.getElementById('doc-folder-input');
   const name = input.value.trim();
