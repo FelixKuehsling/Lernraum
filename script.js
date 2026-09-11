@@ -4045,7 +4045,7 @@ function getModuleData(moduleId){
     cards: state.cards.filter(item => item.folderId === moduleId),
     events: state.events.filter(item => item.moduleId === moduleId),
     docs: state.docs.filter(item => item.folderId === moduleId),
-    studyPlans: (Array.isArray(studyPlans) ? studyPlans : []).filter(item => item.moduleId === moduleId)
+    studyPlans: (Array.isArray(studyPlans) ? studyPlans : []).filter(item => item.folderId === moduleId)
   };
 }
 
@@ -4597,6 +4597,33 @@ function workspaceOpenModule(moduleId){
         <section class="lr-module-section">
           <div class="lr-module-section-head">
             <div>
+              <div class="eyebrow">Lernplan</div>
+              <h4>Lerneinheiten</h4>
+            </div>
+          </div>
+
+          <div class="lr-module-list">
+            ${
+              data.studyPlans.length
+                ? `<div class="lr-module-row" style="display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--line); border-radius:8px; background:var(--bg-soft);">
+                    <span style="font-size:20px;">📅</span>
+                    <div style="flex:1;">
+                      <strong>${data.studyPlans.length} ${data.studyPlans.length === 1 ? 'Einheit' : 'Einheiten'}</strong>
+                      <small style="display:block; color:var(--ink-soft); margin-top:2px;">
+                        <button onclick="openModuleLernplan('${module.id}')" style="background:none; border:none; color:var(--sage); text-decoration:underline; cursor:pointer; padding:0; font:inherit;">
+                          → Zum Lernplan
+                        </button>
+                      </small>
+                    </div>
+                  </div>`
+                : `<div class="lr-module-empty">Noch keine Lerneinheiten.</div>`
+            }
+          </div>
+        </section>
+
+        <section class="lr-module-section">
+          <div class="lr-module-section-head">
+            <div>
               <div class="eyebrow">Unterlagen</div>
               <h4>Dateien</h4>
             </div>
@@ -4673,6 +4700,16 @@ function openModuleKarteikarten(moduleId){
   setTimeout(() => {
     if(typeof renderFlashcardModuleFilter === 'function') renderFlashcardModuleFilter();
     if(typeof renderFlashcards === 'function') renderFlashcards();
+  }, 100);
+}
+
+function openModuleLernplan(moduleId){
+  closeModal();
+  planModuleFilter = moduleId;
+  activateView('planner');
+  setTimeout(() => {
+    if(typeof renderPlanModuleFilter === 'function') renderPlanModuleFilter();
+    if(typeof renderStudyPlans === 'function') renderStudyPlans();
   }, 100);
 }
 
