@@ -2955,7 +2955,8 @@ function renderStudyPlans(){
         <div class="planner-entry-main">
           <div class="planner-entry-title">${escapeHtml(item.title)}</div>
           ${item.details ? `<div class="planner-entry-details">${escapeHtml(item.details)}</div>` : ''}
-          <div class="planner-entry-meta">${item.folderId ? `${escapeHtml(modules.find(m => m.id === item.folderId)?.name || 'Modul')} • ` : ''}${item.duration ? `ca. ${Number(item.duration)} Min.` : ''}</div>
+          ${item.folderId ? `<div class="planner-entry-meta">${escapeHtml(modules.find(m => m.id === item.folderId)?.name || 'Modul')}</div>` : ''}
+          ${item.duration ? `<div class="planner-entry-meta">ca. ${Number(item.duration)} Min.</div>` : ''}
         </div>
         <div class="planner-entry-actions">
           <button class="icon-btn" type="button" onclick="editStudyPlan('${item.id}')" title="Bearbeiten">✎</button>
