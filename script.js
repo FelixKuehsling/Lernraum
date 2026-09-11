@@ -6829,6 +6829,8 @@ function answerGameFixed(chosen) {
     if(lrEditingPlanId){
       const item = studyPlans.find(entry => entry.id === lrEditingPlanId);
       if(item) sel.value = item.folderId || '';
+    }else{
+      sel.value = planModuleFilter || '';
     }
   };
 
