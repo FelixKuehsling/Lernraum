@@ -5161,16 +5161,19 @@ function installFinalUiStyles(){
 const lrFinalActivateView=activateView;
 activateView=function(view){
   lrFinalActivateView(view);
-  if(view==='notes') setTimeout(()=>{installNotesTrashButton();renderNotesList();},0);
+  if(view==='notes') setTimeout(()=>{installNotesTrashButton();renderNoteModuleFilter();renderNotesList();},0);
+  if(view==='cards') setTimeout(()=>{renderFlashcardModuleFilter();},0);
   if(view==='docs') setTimeout(()=>{installDocsFinalLayout();renderDocFolderChips();renderDocList();},0);
 };
 
 setTimeout(()=>{
   installFinalUiStyles();
   installNotesTrashButton();
+  renderNoteModuleFilter();
   installDocsFinalLayout();
   renderDocFolderChips();
   renderDocList();
+  renderFlashcardModuleFilter();
 },250);
 
 
