@@ -4539,12 +4539,17 @@ function workspaceOpenModule(moduleId){
           <div class="lr-module-list">
             ${
               data.cards.length
-                ? data.cards.slice(0, 6).map(card => `
-                    <div class="lr-module-row">
-                      <span>◫</span>
-                      <span>${escapeHtml(card.front || 'Ohne Begriff')}</span>
+                ? `<div class="lr-module-row" style="display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--line); border-radius:8px; background:var(--bg-soft);">
+                    <span style="font-size:20px;">◫</span>
+                    <div style="flex:1;">
+                      <strong>${data.cards.length} ${data.cards.length === 1 ? 'Karte' : 'Karten'}</strong>
+                      <small style="display:block; color:var(--ink-soft); margin-top:2px;">
+                        <button onclick="openModuleKarteikarten('${module.id}')" style="background:none; border:none; color:var(--sage); text-decoration:underline; cursor:pointer; padding:0; font:inherit;">
+                          → Zu Karteikarten
+                        </button>
+                      </small>
                     </div>
-                  `).join('')
+                  </div>`
                 : `<div class="lr-module-empty">Noch keine Karteikarten.</div>`
             }
           </div>
@@ -4619,6 +4624,16 @@ function openModuleDocuments(moduleId){
   setTimeout(() => {
     if(typeof renderDocFolderChips === 'function') renderDocFolderChips();
     if(typeof renderDocList === 'function') renderDocList();
+  }, 100);
+}
+
+function openModuleKarteikarten(moduleId){
+  closeModal();
+  fcModuleFilter = moduleId;
+  activateView('cards');
+  setTimeout(() => {
+    if(typeof renderFlashcardModuleFilter === 'function') renderFlashcardModuleFilter();
+    if(typeof renderFlashcards === 'function') renderFlashcards();
   }, 100);
 }
 
