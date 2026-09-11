@@ -1930,7 +1930,7 @@ window.setNoteModuleFilter = function(id){
 window.setFlashcardModuleFilter = function(id){
   fcModuleFilter = id;
   renderFlashcardModuleFilter();
-  renderFlashcardList();
+  renderFlashcards();
 };
 async function addDocFolder(){
   const input = document.getElementById('doc-folder-input');
