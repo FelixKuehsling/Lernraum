@@ -1409,7 +1409,7 @@ function getFilteredCardIndices(){
     .filter(index => {
       const card = state.cards[index];
 
-      if(fcModuleFilter) {
+      if(fcModuleFilter !== '') {
         if(fcModuleFilter === 'alle') return true;
         return card.folderId === fcModuleFilter;
       }
