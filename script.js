@@ -1924,7 +1924,7 @@ function setDocFolderFilter(id){
 window.setNoteModuleFilter = function(id){
   noteModuleFilter = id;
   renderNoteModuleFilter();
-  renderNoteList();
+  renderNotesList();
 };
 
 window.setFlashcardModuleFilter = function(id){
