@@ -2768,6 +2768,7 @@ function normalizeManualStudyPlans(){
           title: task.title || item.title || 'Lerneinheit',
           details: '',
           duration: Number(task.minutes) || 0,
+          folderId: item.folderId || '',
           done: false,
           createdAt: item.created || Date.now()
         });
@@ -2781,6 +2782,7 @@ function normalizeManualStudyPlans(){
       title: item.title || 'Lerneinheit',
       details: item.details || '',
       duration: Number(item.duration || item.minutes) || 0,
+      folderId: item.folderId || '',
       done: Boolean(item.done),
       createdAt: item.createdAt || item.created || Date.now()
     });
