@@ -4777,14 +4777,14 @@ function openModuleArea(moduleId, view){
 
     .lr-module-stats{
       display:grid;
-      grid-template-columns:repeat(5,minmax(0,1fr));
-      gap:10px;
+      grid-template-columns:repeat(6,minmax(0,1fr));
+      gap:8px;
       margin:20px 0;
     }
 
     .lr-module-stats button{
-      min-height:82px;
-      padding:14px 8px;
+      min-height:68px;
+      padding:10px 6px;
       border:1px solid var(--line);
       border-radius:13px;
       background:var(--bg-soft);
@@ -4799,9 +4799,9 @@ function openModuleArea(moduleId, view){
 
     .lr-module-stats strong{
       display:block;
-      margin-bottom:5px;
+      margin-bottom:4px;
       font-family:'Fraunces',serif;
-      font-size:27px;
+      font-size:24px;
     }
 
     .lr-module-stats span{
