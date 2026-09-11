@@ -4009,7 +4009,7 @@ function getModuleData(moduleId){
   return {
     notes: state.notes.filter(item => item.moduleId === moduleId && !item.deleted),
     todos: state.todos.filter(item => item.moduleId === moduleId),
-    cards: state.cards.filter(item => item.moduleId === moduleId),
+    cards: state.cards.filter(item => item.folderId === moduleId),
     events: state.events.filter(item => item.moduleId === moduleId),
     docs: state.docs.filter(item => item.folderId === moduleId),
     studyPlans: (Array.isArray(studyPlans) ? studyPlans : []).filter(item => item.moduleId === moduleId)
