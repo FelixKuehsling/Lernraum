@@ -110,6 +110,7 @@ const TASK_UI_KEY = 'lernraum_task_ui';
 let selectedNoteId = null;
 var noteFolderFilter = 'alle';
 var noteModuleFilter = '';
+var planModuleFilter = '';
 var calYear, calMonth, selectedDate = null;
 var calViewMode = 'month';
 var weekStartDate = null;
@@ -261,6 +262,7 @@ function activateView(view){
   if(view === 'todo') renderTodos();
   if(view === 'modules') renderModules();
   if(view === 'cards') { renderFlashcardModuleFilter(); renderFlashcards(); }
+  if(view === 'planner') { renderPlanModuleFilter(); renderPlanModuleDropdown(); renderStudyPlans(); }
   if(view !== 'cards'){
     stopGameTimer();
   }
@@ -1927,6 +1929,12 @@ window.setNoteModuleFilter = function(id){
   renderNotesList();
 };
 
+window.setPlanModuleFilter = function(id){
+  planModuleFilter = id;
+  renderPlanModuleFilter();
+  renderStudyPlans();
+};
+
 window.setFlashcardModuleFilter = function(id){
   fcModuleFilter = id;
   renderFlashcardModuleFilter();
@@ -2796,6 +2804,7 @@ function clearStudyPlanForm(){
   if(saveBtn) saveBtn.textContent = '+ Eintragen';
   if(cancelBtn) cancelBtn.hidden = true;
   lrEditingPlanId = null;
+  renderPlanModuleDropdown();
 }
 
 function cancelStudyPlanEdit(){
@@ -2809,11 +2818,13 @@ async function createStudyPlan(){
   const dateEl = document.getElementById('plan-date');
   const detailsEl = document.getElementById('plan-details');
   const durationEl = document.getElementById('plan-duration');
+  const moduleEl = document.getElementById('plan-module');
 
   const title = titleEl?.value.trim() || '';
   const date = dateEl?.value || '';
   const details = detailsEl?.value.trim() || '';
   const duration = Math.max(0, Number(durationEl?.value || 0));
+  const folderId = moduleEl?.value || '';
 
   if(!date){
     notify('Bitte zuerst ein Datum auswählen.', 'error');
@@ -2833,6 +2844,7 @@ async function createStudyPlan(){
       item.title = title;
       item.details = details;
       item.duration = duration;
+      item.folderId = folderId;
       item.updatedAt = Date.now();
     }
     notify('Lerneinheit gespeichert.');
@@ -2843,6 +2855,7 @@ async function createStudyPlan(){
       title,
       details,
       duration,
+      folderId,
       done: false,
       createdAt: Date.now()
     });
@@ -2873,6 +2886,7 @@ function editStudyPlan(id){
   if(duration) duration.value = item.duration || '';
   if(saveBtn) saveBtn.textContent = 'Änderungen speichern';
   if(cancelBtn) cancelBtn.hidden = false;
+  renderPlanModuleDropdown();
   title?.focus();
 }
 
@@ -2893,12 +2907,21 @@ async function deleteStudyPlan(id){
   renderStudyPlans();
 }
 
+function getFilteredStudyPlans(){
+  return studyPlans.filter(plan => {
+    if(planModuleFilter !== '') {
+      return plan.folderId === planModuleFilter;
+    }
+    return true;
+  });
+}
+
 function renderStudyPlans(){
   const wrap = document.getElementById('study-plan-list');
   if(!wrap) return;
 
   normalizeManualStudyPlans();
-  const entries = studyPlans.slice().sort((a, b) => {
+  const entries = getFilteredStudyPlans().slice().sort((a, b) => {
     const dateCompare = String(a.date || '').localeCompare(String(b.date || ''));
     if(dateCompare) return dateCompare;
     return Number(a.createdAt || 0) - Number(b.createdAt || 0);
@@ -5188,6 +5211,7 @@ activateView=function(view){
   if(view==='notes') setTimeout(()=>{installNotesTrashButton();renderNoteModuleFilter();renderNotesList();},0);
   if(view==='cards') setTimeout(()=>{renderFlashcardModuleFilter();},0);
   if(view==='docs') setTimeout(()=>{installDocsFinalLayout();renderDocFolderChips();renderDocList();},0);
+  if(view==='planner') setTimeout(()=>{renderPlanModuleFilter();renderPlanModuleDropdown();},0);
 };
 
 setTimeout(()=>{
@@ -5198,6 +5222,8 @@ setTimeout(()=>{
   renderDocFolderChips();
   renderDocList();
   renderFlashcardModuleFilter();
+  renderPlanModuleFilter();
+  renderPlanModuleDropdown();
 },250);
 
 
@@ -6780,6 +6806,24 @@ function answerGameFixed(chosen) {
     if(!wrap) return;
     const options = [{id:'',name:'Alle Module'},...(Array.isArray(modules)?modules:[])];
     wrap.innerHTML = `<select onchange="setFlashcardModuleFilter(this.value)" style="padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg-soft);color:var(--ink);font-weight:600;cursor:pointer;">${options.map(mod=>`<option value="${escapeHtml(mod.id)}" ${fcModuleFilter===mod.id?'selected':''}>${escapeHtml(mod.name||mod.title||'Alle Module')}</option>`).join('')}</select>`;
+  };
+
+  window.renderPlanModuleFilter = function(){
+    const wrap = document.getElementById('plan-module-filter');
+    if(!wrap) return;
+    const options = [{id:'',name:'Alle Module'},...(Array.isArray(modules)?modules:[])];
+    wrap.innerHTML = `<select onchange="setPlanModuleFilter(this.value)" style="padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg-soft);color:var(--ink);font-weight:600;cursor:pointer;">${options.map(mod=>`<option value="${escapeHtml(mod.id)}" ${planModuleFilter===mod.id?'selected':''}>${escapeHtml(mod.name||mod.title||'Alle Module')}</option>`).join('')}</select>`;
+  };
+
+  window.renderPlanModuleDropdown = function(){
+    const sel = document.getElementById('plan-module');
+    if(!sel) return;
+    const options = [{id:'',name:'Kein Modul'},...(Array.isArray(modules)?modules:[])];
+    sel.innerHTML = options.map(mod=>`<option value="${escapeHtml(mod.id)}">${escapeHtml(mod.name||mod.title||'Kein Modul')}</option>`).join('');
+    if(lrEditingPlanId){
+      const item = studyPlans.find(entry => entry.id === lrEditingPlanId);
+      if(item) sel.value = item.folderId || '';
+    }
   };
 
   window.deleteDocFolder = async function(id){

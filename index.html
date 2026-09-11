@@ -848,6 +848,7 @@
 <div class="eyebrow">Dein persönlicher Lernplan</div>
 <h1 class="view-title">Lernplan</h1>
 <div class="view-sub">Lege selbst fest, was du an welchem Tag lernen möchtest.</div>
+<div id="plan-module-filter" style="margin-bottom:12px;padding:0 12px;"></div>
 </div>
 </div>
 <div class="planner-layout planner-manual-layout">
@@ -869,6 +870,10 @@
 <label>
 <span>Dauer (optional)</span>
 <input id="plan-duration" min="5" placeholder="z. B. 60" step="5" type="number"/>
+</label>
+<label>
+<span>Modul</span>
+<select id="plan-module" style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg-soft);color:var(--ink);font-family:inherit;cursor:pointer;"></select>
 </label>
 <div class="planner-form-actions">
 <button class="btn" id="plan-save-btn" onclick="createStudyPlan()" type="button">+ Eintragen</button>
