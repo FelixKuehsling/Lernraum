@@ -1932,6 +1932,7 @@ window.setNoteModuleFilter = function(id){
 window.setPlanModuleFilter = function(id){
   planModuleFilter = id;
   renderPlanModuleFilter();
+  renderPlanModuleDropdown();
   renderStudyPlans();
 };
 
