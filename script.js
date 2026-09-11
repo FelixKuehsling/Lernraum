@@ -4397,8 +4397,9 @@ function workspaceOpenModule(moduleId){
           </div>
         </div>
 
-        <button type="button" class="icon-btn" onclick="closeModal()">✕</button>
       </div>
+
+      <button type="button" class="icon-btn" onclick="closeModal()" style="position:absolute;right:20px;top:20px;z-index:10;">✕</button>
 
       <div class="lr-module-stats">
         <button onclick="openModuleArea('${module.id}','notes')">
