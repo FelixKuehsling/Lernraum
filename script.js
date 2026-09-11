@@ -1321,20 +1321,6 @@ function renderFcFolderChips(){
     </button>
   `).join('');
 
-  const select = document.getElementById('fc-new-folder');
-  if(select){
-    select.innerHTML =
-      `<option value="">Ohne Kategorie</option>` +
-      state.cardFolders.map(folder => `
-        <option value="${escapeHtml(folder.id)}">${escapeHtml(folder.name)}</option>
-      `).join('');
-
-    if(state.cardFolders.some(folder => folder.id === fcFolderFilter)){
-      select.value = fcFolderFilter;
-    }else{
-      select.value = '';
-    }
-  }
 }
 
 function setFcFolderFilter(id){
