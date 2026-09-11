@@ -4054,6 +4054,11 @@ async function persistModules(){
   }catch(error){
     console.warn('Modul-Backup fehlgeschlagen:', error);
   }
+
+  if(typeof renderNoteModuleFilter === 'function') renderNoteModuleFilter();
+  if(typeof renderFlashcardModuleFilter === 'function') renderFlashcardModuleFilter();
+  if(typeof renderPlanModuleFilter === 'function') renderPlanModuleFilter();
+  if(typeof renderPlanModuleDropdown === 'function') renderPlanModuleDropdown();
 }
 
 async function restoreModulesBackupIfNeeded(){
