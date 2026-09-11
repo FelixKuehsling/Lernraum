@@ -2428,7 +2428,6 @@ function getFilteredNotes(q=''){
     if(q && !hay.includes(q)) return false;
 
     if(noteModuleFilter !== '') {
-      if(noteModuleFilter === 'alle') return true;
       return note.folderId === noteModuleFilter;
     }
 
