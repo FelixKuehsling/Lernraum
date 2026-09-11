@@ -2426,6 +2426,12 @@ function getFilteredNotes(q=''){
     if(!!note.deleted!==!!showTrash) return false;
     const hay=((note.title||'')+' '+(note.content||'')).toLowerCase();
     if(q && !hay.includes(q)) return false;
+
+    if(noteModuleFilter !== '') {
+      if(noteModuleFilter === 'alle') return true;
+      return note.folderId === noteModuleFilter;
+    }
+
     if(noteFolderFilter==='alle') return true;
     if(noteFolderFilter==='ohne') return !note.folderId;
     return note.folderId===noteFolderFilter;
