@@ -777,7 +777,6 @@
         </h1>
 </div>
 </div>
-<div id="fc-module-filter" style="margin-bottom:12px;padding:0 12px;"></div>
 <div class="fc-mode-switch">
 <button class="fc-mode-btn-item" data-mode="manage" onclick="setFcMode('manage')">
         Erstellen
@@ -793,7 +792,7 @@
 <div class="fc-create-form">
 <input id="fc-new-front" placeholder="Begriff" type="text"/>
 <input id="fc-new-back" placeholder="Bedeutung" type="text"/>
-<select id="fc-new-folder"></select>
+<div id="fc-module-filter" style="margin-bottom:0;padding:0;"></div>
 <button class="btn" onclick="saveNewCard()">
       Speichern
   </button>
@@ -808,13 +807,6 @@
 <input accept=".csv,text/csv" hidden="" id="card-csv-input" onchange="importCardsCsv(event)" type="file"/>
 </div>
 <div class="fc-manage-list" id="fc-manage-list"></div>
-</div>
-<div class="folder-row" id="fc-folder-chips" style="justify-content:center;"></div>
-<div class="folder-add" style="justify-content:center;">
-<input id="fc-folder-input" placeholder="Neue Kategorie…" type="text"/>
-<button class="btn ghost small" onclick="addCardFolder()">
-        + Kategorie
-    </button>
 </div>
 <div class="card" id="fc-study-wrap" style="display:none;">
 <div class="study-wrap" id="study-content"></div>
