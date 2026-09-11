@@ -4513,16 +4513,17 @@ function workspaceOpenModule(moduleId){
           <div class="lr-module-list">
             ${
               data.notes.length
-                ? data.notes
-                    .slice()
-                    .sort((a,b) => (b.updated || 0) - (a.updated || 0))
-                    .slice(0, 6)
-                    .map(note => `
-                      <div class="lr-module-row">
-                        <span>✎</span>
-                        <span>${escapeHtml(note.title || 'Ohne Titel')}</span>
-                      </div>
-                    `).join('')
+                ? `<div class="lr-module-row" style="display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--line); border-radius:8px; background:var(--bg-soft);">
+                    <span style="font-size:20px;">✎</span>
+                    <div style="flex:1;">
+                      <strong>${data.notes.length} ${data.notes.length === 1 ? 'Notiz' : 'Notizen'}</strong>
+                      <small style="display:block; color:var(--ink-soft); margin-top:2px;">
+                        <button onclick="openModuleNotes('${module.id}')" style="background:none; border:none; color:var(--sage); text-decoration:underline; cursor:pointer; padding:0; font:inherit;">
+                          → Zu Notizen
+                        </button>
+                      </small>
+                    </div>
+                  </div>`
                 : `<div class="lr-module-empty">Noch keine Notizen.</div>`
             }
           </div>
@@ -4634,6 +4635,16 @@ function openModuleKarteikarten(moduleId){
   setTimeout(() => {
     if(typeof renderFlashcardModuleFilter === 'function') renderFlashcardModuleFilter();
     if(typeof renderFlashcards === 'function') renderFlashcards();
+  }, 100);
+}
+
+function openModuleNotes(moduleId){
+  closeModal();
+  noteModuleFilter = moduleId;
+  activateView('notes');
+  setTimeout(() => {
+    if(typeof renderNoteModuleFilter === 'function') renderNoteModuleFilter();
+    if(typeof renderNotesList === 'function') renderNotesList();
   }, 100);
 }
 
