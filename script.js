@@ -2864,6 +2864,7 @@ async function createStudyPlan(){
 
   await save('lernraum_study_plans', studyPlans);
   clearStudyPlanForm();
+  renderPlanModuleFilter();
   renderStudyPlans();
 }
 
