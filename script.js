@@ -342,6 +342,17 @@ function escapeHtml(s){
   d.textContent = s ?? '';
   return d.innerHTML;
 }
+
+function getModuleColor(moduleId){
+  const colors = ['#A8D5BA', '#F4A261', '#E76F51', '#D4A5A5', '#9D84B7', '#6B9BD1', '#E8B4B8', '#C4B5A0'];
+  let hash = 0;
+  for(let i = 0; i < moduleId.length; i++){
+    hash = ((hash << 5) - hash) + moduleId.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return colors[Math.abs(hash) % colors.length];
+}
+
 function renderDashTodoPreview(){
   const priorityRank = { hoch: 0, mittel: 1, niedrig: 2 };
 
@@ -4131,6 +4142,7 @@ function renderModules(){
       <button
         class="module-card lr-module-central-card"
         onclick="workspaceOpenModule('${module.id}')"
+        style="background-color: ${getModuleColor(module.id)}20; border-color: ${getModuleColor(module.id)};"
       >
         <div class="module-cover">
           ${
