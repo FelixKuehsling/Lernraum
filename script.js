@@ -344,13 +344,15 @@ function escapeHtml(s){
 }
 
 function getModuleColor(moduleId){
-  const colors = ['#A8D5BA', '#F4A261', '#E76F51', '#D4A5A5', '#9D84B7', '#6B9BD1', '#E8B4B8', '#C4B5A0'];
   let hash = 0;
   for(let i = 0; i < moduleId.length; i++){
     hash = ((hash << 5) - hash) + moduleId.charCodeAt(i);
-    hash = hash & hash;
+    hash = hash & 0xFFFFFFFF;
   }
-  return colors[Math.abs(hash) % colors.length];
+  const hue = Math.abs(hash) % 360;
+  const sat = 60 + (Math.abs(hash) % 20);
+  const light = 65 + (Math.abs(hash) % 15);
+  return `hsl(${hue}, ${sat}%, ${light}%)`;
 }
 
 function renderDashTodoPreview(){
