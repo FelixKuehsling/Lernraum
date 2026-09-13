@@ -960,7 +960,28 @@ function renderCalendar(){
   }
   renderDayPanel();
   renderUpcomingEvents();
+  renderEventModuleSelect();
 }
+
+function renderEventModuleSelect(){
+  const select = document.getElementById('event-module');
+  if(!select) return;
+
+  const current = select.value;
+  select.innerHTML = '<option value="">Kein Modul</option>';
+
+  if(Array.isArray(modules)){
+    modules.forEach(mod => {
+      const opt = document.createElement('option');
+      opt.value = mod.id;
+      opt.textContent = mod.name || 'Ohne Namen';
+      select.appendChild(opt);
+    });
+  }
+
+  select.value = current;
+}
+
 function weekLabel(){
   const end = new Date(weekStartDate);
   end.setDate(end.getDate()+6);
@@ -1183,11 +1204,11 @@ async function addEvent(){
   const dateInput = document.getElementById('event-date');
   const dateVal = (dateInput && dateInput.value) ? dateInput.value : selectedDate;
   const time = getEventTime();
-  const type = document.getElementById('event-type').value;
+  const moduleId = document.getElementById('event-module').value || '';
   const recur = document.getElementById('event-recur').value;
   if(recur === 'none'){
     state.events.push({
-      id: uid(), date: dateVal, title, time, type}
+      id: uid(), date: dateVal, title, time, type: 'termin', moduleId}
     );
   }
   else if(recur === 'monthly'){
@@ -1202,7 +1223,7 @@ async function addEvent(){
       const lastDay = new Date(targetYear, targetMonth + 1, 0).getDate();
       const d = new Date(targetYear, targetMonth, Math.min(preferredDay, lastDay));
       state.events.push({
-        id: uid(), date: isoOf(d), title, time, type, recurId}
+        id: uid(), date: isoOf(d), title, time, type: 'termin', moduleId, recurId}
       );
     }
   }
@@ -1216,14 +1237,14 @@ async function addEvent(){
       const d = new Date(base);
       d.setDate(d.getDate() + i* stepDays);
       state.events.push({
-        id: uid(), date: isoOf(d), title, time, type, recurId}
+        id: uid(), date: isoOf(d), title, time, type: 'termin', moduleId, recurId}
       );
     }
   }
   await save('lernraum_events', state.events);
   titleInput.value = '';
   setEventTime('');
-  document.getElementById('event-type').value = 'termin';
+  document.getElementById('event-module').value = '';
   document.getElementById('event-recur').value = 'none';
   renderCalendar();
   renderDashboard();
@@ -2607,7 +2628,7 @@ function editEvent(id){
   document.getElementById('event-time-hour').value= h;
   document.getElementById('event-time-minute').value= m;
   document.getElementById('event-title').value= e.title;
-  document.getElementById('event-type').value= e.type|| 'termin';
+  document.getElementById('event-module').value= e.moduleId|| '';
   openModal(`<h2>Termin bearbeiten</h2><div class="modal-form"><label>Endzeit<input id="edit-end-time" type="time" value="${e.endTime|| ''}
 "></label><label>Ort<input id="edit-location" type="text" value="${escapeHtml(e.location|| '')}
 "></label><label>Beschreibung<textarea id="edit-description">${escapeHtml(e.description|| '')}
@@ -2626,7 +2647,7 @@ async function saveEventEdit(){
   e.date= document.getElementById('event-date').value;
   e.time= getEventTime();
   e.title= document.getElementById('event-title').value.trim();
-  e.type= document.getElementById('event-type').value;
+  e.moduleId= document.getElementById('event-module').value|| '';
   e.endTime= document.getElementById('edit-end-time').value;
   e.location= document.getElementById('edit-location').value.trim();
   e.description= document.getElementById('edit-description').value.trim();
