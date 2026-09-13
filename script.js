@@ -960,7 +960,9 @@ function renderCalendar(){
   }
   renderDayPanel();
   renderUpcomingEvents();
-  renderEventModuleSelect();
+  if(document.getElementById('event-module')){
+    renderEventModuleSelect();
+  }
 }
 
 function renderEventModuleSelect(){
