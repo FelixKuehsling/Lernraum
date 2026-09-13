@@ -343,7 +343,7 @@ function escapeHtml(s){
   return d.innerHTML;
 }
 
-function getModuleColor(moduleId){
+function getModuleColor(moduleId, alpha = 1){
   let hash = 0;
   for(let i = 0; i < moduleId.length; i++){
     hash = ((hash << 5) - hash) + moduleId.charCodeAt(i);
@@ -352,7 +352,7 @@ function getModuleColor(moduleId){
   const hue = Math.abs(hash) % 360;
   const sat = 60 + (Math.abs(hash) % 20);
   const light = 65 + (Math.abs(hash) % 15);
-  return `hsl(${hue}, ${sat}%, ${light}%)`;
+  return `hsla(${hue}, ${sat}%, ${light}%, ${alpha})`;
 }
 
 function renderDashTodoPreview(){
@@ -4144,7 +4144,7 @@ function renderModules(){
       <button
         class="module-card lr-module-central-card"
         onclick="workspaceOpenModule('${module.id}')"
-        style="background-color: ${getModuleColor(module.id)}20; border-color: ${getModuleColor(module.id)};"
+        style="background-color: ${getModuleColor(module.id, 0.2)}; border-color: ${getModuleColor(module.id)};"
       >
         <div class="module-cover">
           ${
