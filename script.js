@@ -4543,18 +4543,19 @@ function workspaceOpenModule(moduleId){
 
           <div class="lr-module-list">
             ${
-              upcomingEvents.length
-                ? upcomingEvents.slice(0, 6).map(event => `
-                    <div class="lr-module-row">
-                      <span class="lr-module-event-dot lr-type-${event.type || 'termin'}"></span>
-                      <span>${escapeHtml(event.title)}</span>
-                      <small>
-                        ${fmtDateShort(event.date)}
-                        ${event.time ? ' · ' + escapeHtml(event.time) : ''}
+              data.events.length
+                ? `<div class="lr-module-row" style="display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--line); border-radius:8px; background:var(--bg-soft);">
+                    <span style="font-size:20px;">📅</span>
+                    <div style="flex:1;">
+                      <strong>${data.events.length} ${data.events.length === 1 ? 'Termin' : 'Termine'}</strong>
+                      <small style="display:block; color:var(--ink-soft); margin-top:2px;">
+                        <button onclick="openModuleCalendar('${module.id}')" style="background:none; border:none; color:var(--sage); text-decoration:underline; cursor:pointer; padding:0; font:inherit;">
+                          → Zum Kalender
+                        </button>
                       </small>
                     </div>
-                  `).join('')
-                : `<div class="lr-module-empty">Keine kommenden Termine.</div>`
+                  </div>`
+                : `<div class="lr-module-empty">Keine Termine.</div>`
             }
           </div>
         </section>
@@ -4696,6 +4697,14 @@ function openModuleKarteikarten(moduleId){
   setTimeout(() => {
     if(typeof renderFlashcardModuleFilter === 'function') renderFlashcardModuleFilter();
     if(typeof renderFlashcards === 'function') renderFlashcards();
+  }, 100);
+}
+
+function openModuleCalendar(moduleId){
+  closeModal();
+  activateView('calendar');
+  setTimeout(() => {
+    if(typeof renderEventModuleSelect === 'function') renderEventModuleSelect();
   }, 100);
 }
 
