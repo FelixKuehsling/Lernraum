@@ -263,6 +263,7 @@ function activateView(view){
   if(view === 'modules') renderModules();
   if(view === 'cards') { renderFlashcardModuleFilter(); renderFlashcards(); }
   if(view === 'planner') { renderPlanModuleFilter(); renderPlanModuleDropdown(); renderStudyPlans(); }
+  if(view === 'calendar') renderEventModuleSelect();
   if(view !== 'cards'){
     stopGameTimer();
   }
