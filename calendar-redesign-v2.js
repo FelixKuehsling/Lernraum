@@ -290,33 +290,10 @@
           </label>
           <label class="lr-cal-field">
             <span>
-              Kategorie
+              Modul
             </span>
-            <select id="event-type">
-              <option value="termin">
-                Persönlich
-              </option>
-              <option value="vorlesung">
-                Vorlesung
-              </option>
-              <option value="uebung">
-                Übung
-              </option>
-              <option value="seminar">
-                Seminar
-              </option>
-              <option value="klausur">
-                Klausur
-              </option>
-              <option value="abgabe">
-                Abgabe
-              </option>
-              <option value="praktikum">
-                Praktikum
-              </option>
-              <option value="lerngruppe">
-                Lerngruppe
-              </option>
+            <select id="event-module">
+              <option value="">Kein Modul</option>
             </select>
           </label>
           <select
