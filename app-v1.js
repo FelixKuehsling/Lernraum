@@ -344,15 +344,24 @@ function escapeHtml(s){
 }
 
 function getModuleColor(moduleId, alpha = 1){
+  const pastelColors = [
+    { hue: 200, sat: 70, light: 75 },
+    { hue: 120, sat: 70, light: 75 },
+    { hue: 60, sat: 80, light: 75 },
+    { hue: 0, sat: 70, light: 75 },
+    { hue: 280, sat: 70, light: 75 },
+    { hue: 30, sat: 75, light: 75 },
+    { hue: 160, sat: 70, light: 75 },
+    { hue: 310, sat: 70, light: 75 }
+  ];
   let hash = 0;
   for(let i = 0; i < moduleId.length; i++){
     hash = ((hash << 5) - hash) + moduleId.charCodeAt(i);
     hash = hash & 0xFFFFFFFF;
   }
-  const hue = Math.abs(hash) % 360;
-  const sat = 75 + (Math.abs(hash) % 20);
-  const light = 65 + (Math.abs(hash) % 12);
-  return `hsla(${hue}, ${sat}%, ${light}%, ${alpha})`;
+  const colorIndex = Math.abs(hash) % pastelColors.length;
+  const color = pastelColors[colorIndex];
+  return `hsla(${color.hue}, ${color.sat}%, ${color.light}%, ${alpha})`;
 }
 
 function renderDashTodoPreview(){
