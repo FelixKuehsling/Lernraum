@@ -345,22 +345,22 @@ function escapeHtml(s){
 
 function getModuleColor(moduleId, alpha = 1){
   const pastelColors = [
-    { hue: 55, sat: 40, light: 88 },
-    { hue: 35, sat: 45, light: 88 },
-    { hue: 30, sat: 40, light: 87 },
-    { hue: 355, sat: 35, light: 87 },
-    { hue: 70, sat: 40, light: 86 },
-    { hue: 120, sat: 45, light: 86 },
-    { hue: 170, sat: 40, light: 86 },
-    { hue: 200, sat: 40, light: 86 },
-    { hue: 210, sat: 40, light: 85 },
-    { hue: 270, sat: 40, light: 86 },
-    { hue: 320, sat: 40, light: 86 },
-    { hue: 350, sat: 35, light: 87 },
-    { hue: 30, sat: 35, light: 87 },
-    { hue: 45, sat: 30, light: 88 },
-    { hue: 0, sat: 20, light: 89 },
-    { hue: 200, sat: 25, light: 87 }
+    { hue: 55, sat: 15, light: 93 },
+    { hue: 35, sat: 18, light: 92 },
+    { hue: 30, sat: 15, light: 92 },
+    { hue: 355, sat: 12, light: 92 },
+    { hue: 70, sat: 15, light: 91 },
+    { hue: 120, sat: 18, light: 91 },
+    { hue: 170, sat: 15, light: 91 },
+    { hue: 200, sat: 15, light: 91 },
+    { hue: 210, sat: 15, light: 90 },
+    { hue: 270, sat: 15, light: 91 },
+    { hue: 320, sat: 15, light: 91 },
+    { hue: 350, sat: 12, light: 92 },
+    { hue: 30, sat: 12, light: 92 },
+    { hue: 45, sat: 10, light: 93 },
+    { hue: 0, sat: 8, light: 94 },
+    { hue: 200, sat: 10, light: 92 }
   ];
   let hash = 0;
   for(let i = 0; i < moduleId.length; i++){
