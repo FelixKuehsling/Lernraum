@@ -2271,19 +2271,30 @@
   window.showDayPopup = function(iso){
     const events = getEvents().filter(e => String(e.date) === iso).sort((a,b) => (a.time || '').localeCompare(b.time || ''));
     const date = parseLocalDate(iso);
-    const title = date.toLocaleDateString('de-DE', {weekday:'short', day:'2-digit', month:'2-digit'});
-    const dayWrap = document.getElementById('cal-day-wrap');
-    if(!dayWrap) return;
-    dayWrap.innerHTML = `
-      <div style="padding:20px; max-width:400px;">
-        <h3 style="margin:0 0 15px 0;">${title}</h3>
-        <div style="display:flex; justify-content:space-between; gap:10px; margin-bottom:15px;">
-          <button onclick="setCalViewMode('month')" style="flex:1; padding:8px;">← Zurück</button>
+    const title = date.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+
+    const modal = document.createElement('div');
+    modal.id = 'day-popup-modal';
+    modal.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:10000;';
+    modal.innerHTML = `
+      <div style="background:#fff; border-radius:16px; padding:24px; max-width:450px; width:90%; max-height:80vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,0.15);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <h2 style="margin:0; font-size:18px; font-weight:600;">${title}</h2>
+          <button onclick="document.getElementById('day-popup-modal').remove()" style="border:none; background:none; font-size:24px; cursor:pointer; padding:0; color:#999;">✕</button>
         </div>
-        ${events.length ? events.map(e => `<div style="padding:10px; margin:5px 0; background:#f5f5f5; border-radius:8px;"><strong>${e.time||'Ganztägig'}</strong><br>${e.title||'Termin'}</div>`).join('') : '<div style="color:#999;">Keine Termine</div>'}
+        <div style="border-top:1px solid #eee; padding-top:16px;">
+          ${events.length ? events.map(e => `
+            <div style="padding:14px; margin-bottom:10px; background:${e.moduleId && typeof window.getModuleColor === 'function' ? window.getModuleColor(e.moduleId, 0.15) : '#f5f5f5'}; border-left:4px solid ${e.moduleId && typeof window.getModuleColor === 'function' ? window.getModuleColor(e.moduleId, 1) : '#ccc'}; border-radius:8px;">
+              <div style="font-weight:600; color:#333;">${e.time ? e.time : 'Ganztägig'}</div>
+              <div style="margin-top:4px; color:#555; font-size:14px;">${e.title || 'Termin ohne Titel'}</div>
+              ${e.description ? `<div style="margin-top:6px; color:#777; font-size:13px;">${e.description}</div>` : ''}
+            </div>
+          `).join('') : '<div style="text-align:center; color:#999; padding:20px;">Keine Termine an diesem Tag</div>'}
+        </div>
       </div>
     `;
-    setCalViewMode('day');
+    document.body.appendChild(modal);
+    modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
   };
   setTimeout(
     startCalendar,
