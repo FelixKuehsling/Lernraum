@@ -1633,6 +1633,8 @@
           <div
             class="lr-cal-day ${otherMonth ? 'other-month' : ''} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}"
             data-date="${iso}"
+            style="cursor:pointer;"
+            onclick="showDayPopup('${iso}')"
           >
             <span class="lr-cal-date">${date.getDate()}</span>
             <div class="lr-cal-events">
@@ -2265,6 +2267,23 @@
       return;
     }
   });
+  window.showDayPopup = function(iso){
+    const events = getEvents().filter(e => String(e.date) === iso).sort((a,b) => (a.time || '').localeCompare(b.time || ''));
+    const date = parseLocalDate(iso);
+    const title = date.toLocaleDateString('de-DE', {weekday:'short', day:'2-digit', month:'2-digit'});
+    const dayWrap = document.getElementById('cal-day-wrap');
+    if(!dayWrap) return;
+    dayWrap.innerHTML = `
+      <div style="padding:20px; max-width:400px;">
+        <h3 style="margin:0 0 15px 0;">${title}</h3>
+        <div style="display:flex; justify-content:space-between; gap:10px; margin-bottom:15px;">
+          <button onclick="setCalViewMode('month')" style="flex:1; padding:8px;">← Zurück</button>
+        </div>
+        ${events.length ? events.map(e => `<div style="padding:10px; margin:5px 0; background:#f5f5f5; border-radius:8px;"><strong>${e.time||'Ganztägig'}</strong><br>${e.title||'Termin'}</div>`).join('') : '<div style="color:#999;">Keine Termine</div>'}
+      </div>
+    `;
+    setCalViewMode('day');
+  };
   setTimeout(
     startCalendar,
     0
