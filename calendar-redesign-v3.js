@@ -1642,7 +1642,7 @@
                 <div
                   class="lr-cal-event ${typeClass(event.type)}"
                   data-event-id="${safeText(String(event.id || ''))}"
-                  style="background-color: ${event.moduleId && typeof window.getModuleColor === 'function' ? window.getModuleColor(event.moduleId, 0.15) : 'transparent'}; border-left: 3px solid ${event.moduleId && typeof window.getModuleColor === 'function' ? window.getModuleColor(event.moduleId) : 'currentColor'};"
+                  style="border-left: 4px solid ${event.moduleId && typeof window.getModuleColor === 'function' ? window.getModuleColor(event.moduleId) : 'currentColor'};"
                 >
                   <button
                     class="lr-cal-delete"
