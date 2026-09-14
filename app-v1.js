@@ -350,8 +350,8 @@ function getModuleColor(moduleId, alpha = 1){
     hash = hash & 0xFFFFFFFF;
   }
   const hue = Math.abs(hash) % 360;
-  const sat = 60 + (Math.abs(hash) % 20);
-  const light = 65 + (Math.abs(hash) % 15);
+  const sat = 70 + (Math.abs(hash) % 25);
+  const light = 40 + (Math.abs(hash) % 15);
   return `hsla(${hue}, ${sat}%, ${light}%, ${alpha})`;
 }
 
