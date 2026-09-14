@@ -1873,7 +1873,7 @@
   ========================================================== */
   window.setCalViewMode =
     function (mode) {
-      lrViewMode = mode === 'week' ? 'week' : 'month';
+      lrViewMode = (mode === 'week' || mode === 'day') ? mode : 'month';
       document
         .querySelectorAll('#view-calendar .cal-view-btn')
         .forEach(button => {
@@ -1881,8 +1881,10 @@
         });
       const monthWrap = document.getElementById('cal-month-wrap');
       const weekWrap = document.getElementById('cal-week-wrap');
+      const dayWrap = document.getElementById('cal-day-wrap');
       if (monthWrap) monthWrap.style.display = lrViewMode === 'month' ? 'block' : 'none';
       if (weekWrap) weekWrap.style.display = lrViewMode === 'week' ? 'block' : 'none';
+      if (dayWrap) dayWrap.style.display = lrViewMode === 'day' ? 'block' : 'none';
       if (lrViewMode === 'week') {
         lrWeekStart = mondayOf(parseLocalDate(lrSelectedDate));
       }
