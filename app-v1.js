@@ -4144,7 +4144,6 @@ function renderModules(){
       <button
         class="module-card lr-module-central-card"
         onclick="workspaceOpenModule('${module.id}')"
-        style="background-color: ${getModuleColor(module.id, 0.2)}; border-color: ${getModuleColor(module.id)};"
       >
         <div class="module-cover">
           ${
