@@ -3104,15 +3104,16 @@ activateView= function(view){
 }
 )();
 let lernraumInstallPrompt = null;
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js').catch(error => {
-      console.error('Service Worker konnte nicht registriert werden:', error);
-    }
-    );
-  }
-  );
-}
+// Service Worker registration disabled - file not deployed
+// if ('serviceWorker' in navigator) {
+//   window.addEventListener('load', () => {
+//     navigator.serviceWorker.register('./service-worker.js').catch(error => {
+//       console.error('Service Worker konnte nicht registriert werden:', error);
+//     }
+//     );
+//   }
+//   );
+// }
 window.addEventListener('beforeinstallprompt', event => {
   event.preventDefault();
   lernraumInstallPrompt = event;
