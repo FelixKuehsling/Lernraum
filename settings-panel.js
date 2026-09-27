@@ -55,7 +55,11 @@ async function initiateSyncLogin() {
 
 // Logout Flow
 async function initiateSyncLogout() {
-  if (typeof signOut === 'function') {
+  if (typeof logoutLernraum === 'function') {
+    await logoutLernraum();
+    updateSyncStatus();
+    alert('Abgemeldet!');
+  } else if (typeof signOut === 'function') {
     await signOut();
     updateSyncStatus();
     alert('Abgemeldet!');

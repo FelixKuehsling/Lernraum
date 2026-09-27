@@ -1,6 +1,12 @@
 const SUPABASE_URL = 'https://jureyjdijtcfcsfcmfjz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_94JcCbPPozmYQY3LkQsKhQ_YQk3kW9v';
 
+// Merken, ob die Seite über einen "Passwort zurücksetzen"-Link geöffnet wurde
+const LERNRAUM_APP_URL = 'https://felixkuehsling.github.io/Lernraum/';
+const lernraumIsPasswordRecovery =
+  window.location.hash.includes('type=recovery');
+let lernraumRecoveryDialogShown = false;
+
 const supabaseClient = supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY,
@@ -253,6 +259,21 @@ function openSyncDialog() {
       </button>
 
       <button
+        id="sync-register-btn"
+        style="${syncButtonStyle(true)}"
+      >
+        Neues Konto erstellen
+      </button>
+
+      <button
+        id="sync-forgot-btn"
+        type="button"
+        style="display:block;width:100%;margin-top:10px;padding:4px;background:none;border:none;color:inherit;opacity:.7;font:inherit;font-size:12px;text-decoration:underline;cursor:pointer;"
+      >
+        Passwort vergessen?
+      </button>
+
+      <button
         id="sync-close-btn"
         style="${syncButtonStyle(true)}"
       >
@@ -342,6 +363,23 @@ function openSyncDialog() {
       ?.addEventListener(
         'click',
         registerLernraum
+      );
+
+    document
+      .getElementById('sync-forgot-btn')
+      ?.addEventListener(
+        'click',
+        resetPasswordLernraum
+      );
+
+    // Enter-Taste im Passwortfeld = Anmelden
+    document
+      .getElementById('sync-password')
+      ?.addEventListener(
+        'keydown',
+        event => {
+          if (event.key === 'Enter') loginLernraum();
+        }
       );
   }
 }
@@ -442,7 +480,7 @@ async function registerLernraum() {
       password,
       options: {
         emailRedirectTo:
-          'https://felixkuehsling.github.io/Lernraum/lernapp/'
+          LERNRAUM_APP_URL
       }
     });
 
@@ -535,6 +573,148 @@ async function loginLernraum() {
   await initializeCloudAfterLogin();
 
   openSyncDialog();
+}
+
+
+/* =========================================================
+   PASSWORT VERGESSEN
+========================================================= */
+
+async function resetPasswordLernraum() {
+  const email =
+    document
+      .getElementById('sync-email')
+      ?.value
+      .trim();
+
+  if (!email) {
+    setSyncMessage(
+      'Bitte zuerst oben deine E-Mail-Adresse eingeben.'
+    );
+    return;
+  }
+
+  setSyncMessage('E-Mail wird gesendet …');
+
+  const { error } =
+    await supabaseClient.auth.resetPasswordForEmail(
+      email,
+      { redirectTo: LERNRAUM_APP_URL }
+    );
+
+  if (error) {
+    setSyncMessage(error.message);
+    return;
+  }
+
+  setSyncMessage(
+    'Falls ein Konto mit dieser E-Mail existiert, haben wir dir einen Link zum Zurücksetzen geschickt. Schau auch im Spam-Ordner nach.'
+  );
+}
+
+
+/* =========================================================
+   NEUES PASSWORT SETZEN (nach Klick auf den Link in der E-Mail)
+========================================================= */
+
+function openNewPasswordDialog() {
+  if (lernraumRecoveryDialogShown) return;
+  lernraumRecoveryDialogShown = true;
+
+  document
+    .getElementById('lernraum-sync-overlay')
+    ?.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'lernraum-sync-overlay';
+  overlay.style.cssText = `
+    position:fixed;
+    inset:0;
+    z-index:99999;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:rgba(0,0,0,.45);
+  `;
+
+  const panel = document.createElement('div');
+  panel.style.cssText = `
+    width:min(420px,100%);
+    background:var(--surface,#fff);
+    color:var(--ink,#222);
+    border:1px solid var(--line,#ddd);
+    border-radius:18px;
+    padding:22px;
+    box-shadow:0 20px 60px rgba(0,0,0,.25);
+    font-family:inherit;
+  `;
+
+  panel.innerHTML = `
+    <h2 style="margin:0 0 8px;">Neues Passwort</h2>
+    <p style="margin:0 0 16px;opacity:.7;">
+      Wähle ein neues Passwort für dein Lernraum-Konto.
+    </p>
+    <input
+      id="sync-new-password"
+      type="password"
+      placeholder="Neues Passwort (mind. 6 Zeichen)"
+      autocomplete="new-password"
+      style="${syncInputStyle()}"
+    >
+    <input
+      id="sync-new-password-2"
+      type="password"
+      placeholder="Neues Passwort wiederholen"
+      autocomplete="new-password"
+      style="${syncInputStyle()}"
+    >
+    <button id="sync-save-password-btn" style="${syncButtonStyle()}">
+      Passwort speichern
+    </button>
+    <div id="sync-message" style="margin-top:12px;font-size:12px;opacity:.75;"></div>
+  `;
+
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+
+  document
+    .getElementById('sync-save-password-btn')
+    ?.addEventListener('click', saveNewPasswordLernraum);
+}
+
+
+async function saveNewPasswordLernraum() {
+  const pw1 = document.getElementById('sync-new-password')?.value || '';
+  const pw2 = document.getElementById('sync-new-password-2')?.value || '';
+
+  if (pw1.length < 6) {
+    setSyncMessage('Das Passwort muss mindestens 6 Zeichen lang sein.');
+    return;
+  }
+
+  if (pw1 !== pw2) {
+    setSyncMessage('Die beiden Passwörter stimmen nicht überein.');
+    return;
+  }
+
+  setSyncMessage('Wird gespeichert …');
+
+  const { error } =
+    await supabaseClient.auth.updateUser({ password: pw1 });
+
+  if (error) {
+    setSyncMessage(error.message);
+    return;
+  }
+
+  setSyncMessage('Passwort geändert. Du bist jetzt angemeldet.');
+
+  setTimeout(() => {
+    document
+      .getElementById('lernraum-sync-overlay')
+      ?.remove();
+  }, 1500);
 }
 
 
@@ -1060,6 +1240,10 @@ async function initLernraumSync() {
     await initializeCloudAfterLogin();
   }
 
+  if (lernraumIsPasswordRecovery && lernraumSyncUser) {
+    openNewPasswordDialog();
+  }
+
 
   supabaseClient.auth.onAuthStateChange(
     async (event, session) => {
@@ -1067,6 +1251,10 @@ async function initLernraumSync() {
         session?.user || null;
 
       updateSyncButton();
+
+      if (event === 'PASSWORD_RECOVERY') {
+        openNewPasswordDialog();
+      }
 
       if (
         lernraumSyncUser &&
