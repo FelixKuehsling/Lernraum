@@ -26,8 +26,7 @@
 <meta content="Lernraum" name="apple-mobile-web-app-title"/>
 <link href="manifest.json" rel="manifest"/>
 <link href="assets/app-icon-192.png" rel="apple-touch-icon"/>
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&amp;family=Karla:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="assets/fonts/fonts.css" rel="stylesheet"/>
 <link href="style.css?v=37" rel="stylesheet"/>
 <style id="dashboard-v3-overrides">
 /* Dashboard V3 - nur fuer die neue Startseite */
@@ -321,7 +320,8 @@
 </div>
 <div class="sidebar-foot">
         für ruhige Lernstunden ✎<br>
-  <a href="rechtliches.html" style="color:inherit; font-size:11px; opacity:.7;">Impressum &amp; Datenschutz</a>
+  <a href="#" onclick="openFeedbackDialog(); return false;" style="color:inherit; font-size:11px; opacity:.7;">Feedback</a> · 
+<a href="rechtliches.html" style="color:inherit; font-size:11px; opacity:.7;">Impressum &amp; Datenschutz</a>
   </div>
 </div>
 <!-- ======================================================
@@ -645,7 +645,8 @@
 </div>
 </div>
    <p style="margin-top:20px; text-align:center; font-size:11px; opacity:.6;">
-     <a href="rechtliches.html" style="color:inherit;">Impressum &amp; Datenschutz</a>
+     <a href="#" onclick="openFeedbackDialog(); return false;" style="color:inherit;">Feedback &amp; Ideen</a> ·
+<a href="rechtliches.html" style="color:inherit;">Impressum &amp; Datenschutz</a>
    </p>
 </div>
 <!-- ====================================================
@@ -941,11 +942,12 @@
 <!-- ========================================================
        SCRIPTS
 ========================================================= -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="vendor/supabase-2.117.2.js"></script>
 <script src="app-v1.js?v=10&t=1789375518" defer></script>
 <script src="calendar-redesign-v3.js?v=1001&t=1789375708" defer></script>
 <script src="sync.js?v=303&t=1789375014"></script>
 <script src="settings-panel.js?v=302&t=1789313121"></script>
+<script src="feedback.js?v=1"></script>
 <script id="dashboard-v3-script">
 (function(){
   'use strict';
