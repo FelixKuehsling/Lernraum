@@ -722,6 +722,14 @@ function createLernraumSnapshot() {
     noteFolders:
       state.noteFolders || [],
 
+    /* Unterlagen: nur die Liste (Name, Größe, …). Die Dateien
+       selbst liegen im Supabase-Speicher (docs-sync.js). */
+    docs:
+      state.docs || [],
+
+    docFolders:
+      state.docFolders || [],
+
     modules:
       typeof modules !== 'undefined'
         ? modules
@@ -898,6 +906,21 @@ async function applyLernraumSnapshot(snapshot) {
         ? snapshot.noteFolders
         : [];
 
+    /* Unterlagen: Cloud-Liste übernehmen, aber lokale Dateien,
+       die noch nicht hochgeladen wurden, behalten. Ältere
+       Sicherungen ohne Unterlagen-Liste ändern nichts. */
+    if (Array.isArray(snapshot.docs)) {
+      const cloudIds = new Set(snapshot.docs.map(doc => doc.id));
+      const pendingLocal = (state.docs || []).filter(
+        doc => !doc.cloud && !cloudIds.has(doc.id)
+      );
+      state.docs = [...snapshot.docs, ...pendingLocal];
+    }
+
+    if (Array.isArray(snapshot.docFolders)) {
+      state.docFolders = snapshot.docFolders;
+    }
+
     if (
       typeof modules !== 'undefined'
     ) {
@@ -973,6 +996,16 @@ async function applyLernraumSnapshot(snapshot) {
       save(
         'lernraum_note_folders',
         state.noteFolders
+      ),
+
+      save(
+        'lernraum_docs_index',
+        state.docs || []
+      ),
+
+      save(
+        'lernraum_doc_folders',
+        state.docFolders || []
       )
     ];
 
@@ -1098,6 +1131,11 @@ async function initializeCloudAfterLogin() {
   }
 
   lernraumCloudReady = true;
+
+  /* Unterlagen, die noch nur lokal liegen, hochladen */
+  if (typeof window.lernraumSyncDocs === 'function') {
+    window.lernraumSyncDocs();
+  }
 }
 
 

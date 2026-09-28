@@ -1622,7 +1622,7 @@ Fokus-Modus</span>
   }
 }
 )();
-const MAX_INDEXED_DOC_BYTES = 100 * 1024 * 1024;
+const MAX_INDEXED_DOC_BYTES = 50 * 1024 * 1024;
 let learningHistory = [];
 let studyPlans = [];
 let lrEditingPlanId = null;
@@ -1723,7 +1723,7 @@ async function handleDocUpload(evt){
   if(!files.length) return;
   for(const file of files){
     if(file.size>MAX_INDEXED_DOC_BYTES){
-      notify(file.name+' ist gr\u00F6\u00DFer als 100 MB.', 'error');
+      notify(file.name+' ist gr\u00F6\u00DFer als 50 MB.', 'error');
       continue;
     }
     const id= uid();
@@ -1814,7 +1814,7 @@ function renderDocList(){
         <div class="lr-doc-info">
           <div class="doc-name">${escapeHtml(doc.name)}</div>
           <div class="doc-meta">
-            ${fmtBytes(doc.size)} · ${new Date(doc.added).toLocaleDateString('de-DE')}${folder ? ' · ' + escapeHtml(folder.name) : ''}
+            ${fmtBytes(doc.size)} · ${new Date(doc.added).toLocaleDateString('de-DE')}${folder ? ' · ' + escapeHtml(folder.name) : ''}${doc.cloud ? ' · ☁' : ''}
           </div>
         </div>
 
