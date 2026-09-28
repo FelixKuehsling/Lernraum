@@ -2252,6 +2252,11 @@
   }
   /* KEYBOARD SHORTCUTS */
   document.addEventListener('keydown', (e) => {
+    /* Nur im Kalender und nicht beim Tippen in Feldern */
+    const calActive = document.getElementById('view-calendar')?.classList.contains('active');
+    const t = e.target;
+    const typing = t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+    if (!calActive || typing || document.querySelector('#day-popup-modal, #lr-series-dialog')) return;
     /* Arrow Left = Woche/Monat zurück */
     if (e.key === 'ArrowLeft' && !e.ctrlKey) {
       calShift(-1);
@@ -2296,10 +2301,11 @@
           ${events.length ? events.map(e => `
             <div style="display:flex; align-items:flex-start; gap:10px; padding:12px 12px 12px 14px; margin-bottom:10px; background:${color(e.moduleId,0.15) || 'var(--bg-soft,#f5f5f5)'}; border-left:4px solid ${color(e.moduleId,1) || 'var(--line,#ccc)'}; border-radius:8px;">
               <div style="flex:1; min-width:0;">
-                <div style="font-weight:600;">${safeText(e.time ? e.time : 'Ganztägig')}</div>
+                <div style="font-weight:600;">${safeText(e.time ? e.time : 'Ganztägig')}${e.recurId ? ' <span title="Wiederkehrender Termin" style="opacity:.6;font-weight:400;">🔁</span>' : ''}</div>
                 <div style="margin-top:4px; font-size:14px; opacity:.85; overflow-wrap:anywhere;">${safeText(e.title || 'Termin ohne Titel')}</div>
                 ${e.description ? `<div style="margin-top:6px; font-size:13px; opacity:.7;">${safeText(e.description)}</div>` : ''}
               </div>
+              <button type="button" data-popup-edit="${safeText(String(e.id))}" title="Termin bearbeiten" aria-label="Termin bearbeiten" style="flex-shrink:0; border:1px solid var(--line,#ddd); background:transparent; color:var(--ink-soft,#777); border-radius:8px; width:32px; height:32px; font-size:15px; cursor:pointer;">✎</button>
               <button type="button" data-popup-delete="${safeText(String(e.id))}" title="Termin löschen" aria-label="Termin löschen" style="flex-shrink:0; border:1px solid var(--line,#ddd); background:transparent; color:var(--ink-soft,#777); border-radius:8px; width:32px; height:32px; font-size:16px; cursor:pointer;">🗑</button>
             </div>
           `).join('') : '<div style="text-align:center; opacity:.6; padding:20px;">Keine Termine an diesem Tag</div>'}
@@ -2309,6 +2315,14 @@
     document.body.appendChild(modal);
     modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
     modal.querySelector('[data-popup-close]')?.addEventListener('click', () => modal.remove());
+    modal.querySelectorAll('[data-popup-edit]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (typeof window.lrEditCalendarEvent !== 'function') return;
+        modal.remove();
+        window.lrEditCalendarEvent(btn.dataset.popupEdit, () => window.showDayPopup(iso));
+      });
+    });
     modal.querySelectorAll('[data-popup-delete]').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
