@@ -11,7 +11,7 @@ jeder Push ist nach ~1 Min. live). Cache-Busting über `?v=` an den Script-/CSS-
 in `index.html` – **bei jeder Änderung an einer JS/CSS-Datei die Versionsnummer erhöhen.**
 
 Ladereihenfolge in `index.html` (wichtig!):
-1. `vendor/supabase-2.117.2.js`, dann **ohne defer**: `sync.js`, `settings-panel.js`, `feedback.js`
+1. `vendor/supabase-2.117.2.js`, dann **ohne defer**: `sync.js`, `settings-panel.js`
 2. **mit defer** (laufen danach): `app-v1.js`, `calendar-redesign-v3.js`, `calendar-series.js`,
    `docs-sync.js`, `onboarding.js`, `account-tools.js`
 3. Inline `dashboard-v3-script`, `notifications.js`
@@ -28,7 +28,6 @@ Folge: `sync.js` läuft **vor** `app-v1.js`. Dinge aus app-v1 (z. B. `save`) dor
 | `docs-sync.js` | Unterlagen-Dateien im Supabase-Storage-Bucket `lernraum-docs` (`<user_id>/<doc_id>`), lädt fehlende Dateien automatisch aus der Cloud |
 | `account-tools.js` | Backup-Export/-Import (JSON inkl. Dateien), Konto löschen (RPC `delete_my_account`) |
 | `onboarding.js` | Einführungs-Tour für neue Nutzer + Banner „Daten nur im Browser“ |
-| `feedback.js` | Feedback-Formular → Tabelle `feedback` |
 | `settings-panel.js` | Status-Anzeige in den Einstellungen |
 | `rechtliches.html` | Impressum & Datenschutz – bei neuen Datenverarbeitungen anpassen! |
 
@@ -38,7 +37,6 @@ Dunkelmodus über Klasse `html.dark`. Schriften lokal in `assets/fonts/` (keine 
 ## Supabase (vom Betreiber eingerichtet)
 
 - Tabelle `lernraum_sync` (user_id, data jsonb, updated_at) mit RLS: nur eigene Zeile
-- Tabelle `feedback` (insert für anon/authenticated, kein Lesen über die App)
 - Storage-Bucket `lernraum-docs` (privat, 50 MB/Datei), Policies: nur eigener Ordner
 - Funktion `delete_my_account()` (security definer)
 - Site URL / Redirect: `https://felixkuehsling.github.io/Lernraum/**`
