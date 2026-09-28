@@ -1553,3 +1553,6 @@ html.dark .dash-calendar-card .mini-cal-day { background: var(--bg-soft); }
   transform: translateY(0) !important;
   box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3) !important;
 }
+/* Heute im Dashboard-Mini-Kalender: muss die Hintergrund-Regeln für hell/dunkel überstimmen */
+html:not(.dark) .dash-calendar-card .mini-cal-day.today,
+html.dark .dash-calendar-card .mini-cal-day.today { background: var(--sage); color: #fff; border-color: var(--sage); }

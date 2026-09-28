@@ -368,11 +368,7 @@ d<=daysInMonth;
 d++){
   const iso = `${dashCalYear}-${String(dashCalMonth+1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 const isToday = iso === todayISO();
-html += `<div class="mini-cal-day ${isToday? 'today': ''}
-" onclick="goToCalendarDay('${iso}
-')">${d}
-${eventDotsHtml(iso)}
-</div>`;
+html += `<div class="mini-cal-day ${isToday? 'today': ''}" onclick="goToCalendarDay('${iso}')">${d}${eventDotsHtml(iso)}</div>`;
 }
 grid.innerHTML = html;
 }
