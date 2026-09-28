@@ -153,74 +153,12 @@ let gameOver = false;
 let gameAnswered = false;
 let gameQuestionsAnswered = 0;
 let gameHighscore = 0;
-let lernuhrTotal = 30 * 60;
-let lernuhrRemaining = 30 * 60;
+let lernuhrTotal = 0;
+let lernuhrRemaining = 0;
 let lernuhrRunning = false;
 let lernuhrInterval = null;
-const LERNUHR_CIRC = 2 * Math.PI * 44;
-function renderLernuhr(){
-  const progress = document.getElementById('lernuhr-progress');
-  const timeEl = document.getElementById('lernuhr-time');
-  const widget = document.getElementById('lernuhr-widget');
-  const toggleBtn = document.getElementById('lernuhr-toggle');
-  if(!progress || !timeEl || !widget || !toggleBtn) return;
-  progress.style.strokeDasharray = String(LERNUHR_CIRC);
-  const frac = lernuhrTotal > 0 ? Math.max(0, lernuhrRemaining / lernuhrTotal) : 0;
-  progress.style.strokeDashoffset = String(LERNUHR_CIRC * (1 - frac));
-  const mins = Math.floor(lernuhrRemaining / 60);
-  const secs = lernuhrRemaining % 60;
-  timeEl.textContent = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2,
-  '0');
-  widget.classList.toggle('running', lernuhrRunning);
-  widget.classList.toggle('done', lernuhrRemaining <= 0);
-  toggleBtn.textContent = lernuhrRunning ? '\u275A\u275A' : '\u25B6';
-  toggleBtn.title = lernuhrRunning ? 'Pause' : 'Start';
-}
-function toggleLernuhr(){
-  if(lernuhrRunning) pauseLernuhr();
-  else startLernuhr();
-}
-function startLernuhr(){
-  if(lernuhrRemaining <= 0 || lernuhrRunning) return;
-  lernuhrRunning = true;
-  renderLernuhr();
-  lernuhrInterval = setInterval(async ()=> {
-    lernuhrRemaining--;
-    stats.lernuhrSeconds++;
-    if(stats.lernuhrSeconds % 5 === 0){
-      await saveStats();
-    }
-    if(lernuhrRemaining <= 0){
-      lernuhrRemaining = 0;
-      pauseLernuhr();
-      await saveStats();
-    }
-    renderLernuhr();
-  }
-  , 1000);
-}
-function pauseLernuhr(){
-  lernuhrRunning = false;
-  if(lernuhrInterval){
-    clearInterval(lernuhrInterval);
-    lernuhrInterval = null;
-  }
-  renderLernuhr();
-}
-async function resetLernuhr(){
-  pauseLernuhr();
-  lernuhrRemaining = lernuhrTotal;
-  await saveStats();
-  renderLernuhr();
-}
-function setLernuhrPreset(min){
-  pauseLernuhr();
-  lernuhrTotal = min * 60;
-  lernuhrRemaining = lernuhrTotal;
-  document.querySelectorAll('.lernuhr-preset-btn').forEach(b=> b.classList.toggle('active',
-  parseInt(b.dataset.min, 10) === min));
-  renderLernuhr();
-}
+
+
 let stats = defaultStats();
 function defaultStats(){
   return {
@@ -489,19 +427,7 @@ function setNoteFolderFilter(id){
   renderNoteFolderChips();
   renderNotesList();
 }
-async function addNoteFolder(){
-  const input = document.getElementById('note-folder-input');
-  const name = input.value.trim();
-  if(!name) return;
-  state.noteFolders.push({
-    id: uid(), name}
-  );
-  await save('lernraum_note_folders', state.noteFolders);
-  input.value = '';
-  await saveStats();
-  renderNoteFolderChips();
-  renderNoteEditor();
-}
+
 async function deleteNoteFolder(id){
   state.noteFolders = state.noteFolders.filter(f=> f.id!==id);
   state.notes.forEach(n=> {
@@ -514,31 +440,8 @@ async function deleteNoteFolder(id){
   renderNoteFolderChips();
   renderNotesList();
 }
-function debounce(fn, ms){
-  let t;
-  return (...args)=> {
-    clearTimeout(t);
-    t = setTimeout(()=> fn(...args), ms);
-  }
-  ;
-}
-async function updateNoteFields(){
-  const note = state.notes.find(n=> n.id===selectedNoteId);
-  if(!note) return;
-  note.title = document.getElementById('note-title').value;
-  note.content = document.getElementById('note-content').value;
-  note.updated = Date.now();
-  await save('lernraum_notes', state.notes);
-  renderNotesList(false);
-}
-async function updateNoteFolder(folderId){
-  const note = state.notes.find(n=> n.id===selectedNoteId);
-  if(!note) return;
-  note.folderId = folderId;
-  note.updated = Date.now();
-  await save('lernraum_notes', state.notes);
-  renderNotesList();
-}
+
+
 async function createNote(){
   showTrash=false;
   const folderId=(noteFolderFilter!=='alle'&&noteFolderFilter!=='ohne')?noteFolderFilter:null;
@@ -546,10 +449,7 @@ async function createNote(){
   state.notes.unshift(note);selectedNoteId=note.id;
   await save('lernraum_notes',state.notes);stats.notesCreated++;await saveStats();renderNotesList();setTimeout(()=>document.getElementById('note-title')?.focus(),50);
 }
-function selectNote(id){
-  selectedNoteId = id;
-  renderNotesList();
-}
+
 const TASK_STATUS_LABELS = { geplant: 'Geplant', bearbeitung: 'In Bearbeitung', erledigt: 'Erledigt' };
 function normalizeTask(t){
   if(!t) return t;
@@ -634,12 +534,7 @@ function taskDeadlineHtml(iso){
 )}
 </span>`;
 }
-function taskProgressHtml(v){
-  v= Math.max(0, Math.min(100, Number(v)|| 0));
-  return `<div class="db-progress"><span class="db-progress-num">${v}
-%</span><div class="db-progress-track"><div class="db-progress-fill" style="width:${v}
-%"></div></div></div>`;
-}
+
 function taskStatusHtml(status){
   const s= TASK_STATUS_LABELS[status]? status: 'geplant';
   return `<span class="db-chip status-${s}
@@ -666,21 +561,12 @@ function taskModuleHtml(id){
  ${escapeHtml(m.name)}
 </span>`: '<span style="color:var(--ink-faint)">\u2014</span>';
 }
-async function addTodo(){
-  workspaceNewTask();
-}
+
 async function toggleTodo(id){
   return workspaceToggleTask(id);
 }
-async function deleteTodo(id){
-  return workspaceDeleteTask(id);
-}
-function setTodoFilter(f){
-  taskStatusFilter = f==='offen' ? 'all' : f==='erledigt' ? 'erledigt' : 'all';
-  if(f==='offen') taskRange= 'all';
-  saveTaskUi();
-  renderTodos();
-}
+
+
 function renderTodos(){
   taskRange='all';
   const wrap=document.getElementById('workspace-task-content');
@@ -887,21 +773,11 @@ function workspaceTaskFilterChanged(){
   saveTaskUi();
   renderTodos();
 }
-function workspaceTaskFilterModule(id){
-  taskModuleFilter= id;
-  taskRange= 'all';
-  saveTaskUi();
-  renderTodos();
-}
-async function saveModules(){
-  await save('lernraum_modules', modules);
-}
+
+
 const MONTHS = ['Januar', 'Februar', 'M\u00E4rz', 'April', 'Mai', 'Juni',
 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 const DOWS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-const WEEK_HOURS = Array.from({
-  length: 14}
-, (_, i)=> i+7);
 function initCalendar(){
   const now = new Date();
   calYear = now.getFullYear();
@@ -922,76 +798,7 @@ function getMonday(d){
 function isoOf(d){
   return localISODate(d);
 }
-function setCalViewMode(mode){
-  calViewMode = mode;
-  document.querySelectorAll('.cal-view-btn').forEach(b=> b.classList.toggle('active',
-  b.dataset.view===mode));
-  document.getElementById('cal-month-wrap').style.display = mode==='month' ? 'block' : 'none';
-  document.getElementById('cal-week-wrap').style.display = mode==='week' ? 'block' : 'none';
-  document.getElementById('cal-day-wrap').style.display = mode==='day' ? 'block' : 'none';
-  if(mode==='week' && selectedDate){
-    weekStartDate = getMonday(new Date(selectedDate+'T00:00:00'));
-  }
-  if(mode==='day' && !selectedDate){
-    selectedDate = todayISO();
-  }
-  renderCalendar();
-}
-function calShift(dir){
-  if(calViewMode === 'day'){
-    const d = new Date(selectedDate+'T00:00:00');
-    d.setDate(d.getDate() + dir);
-    selectedDate = isoOf(d);
-    renderCalendar();
-    return;
-  }
-  if(calViewMode === 'week'){
-    weekStartDate.setDate(weekStartDate.getDate() + dir* 7);
-    renderCalendar();
-    return;
-  }
-  calMonth += dir;
-  if(calMonth < 0){
-    calMonth = 11;
-    calYear--;
-  }
-  if(calMonth > 11){
-    calMonth = 0;
-    calYear++;
-  }
-  renderCalendar();
-}
-function calGoToday(){
-  const now = new Date();
-  calYear = now.getFullYear();
-  calMonth = now.getMonth();
-  selectedDate = todayISO();
-  weekStartDate = getMonday(new Date());
-  renderCalendar();
-}
-function renderCalendar(){
-  if(calViewMode === 'week'){
-    document.getElementById('cal-label').textContent = weekLabel();
-    renderWeekView();
-  }
-  else if(calViewMode === 'day'){
-    const d = new Date(selectedDate+'T00:00:00');
-    document.getElementById('cal-label').textContent = d.toLocaleDateString('de-DE',
-    {
-      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'}
-    );
-    renderDayTimelineView();
-  }
-  else {
-    document.getElementById('cal-label').textContent = MONTHS[calMonth] + ' ' + calYear;
-    renderMonthGrid();
-  }
-  renderDayPanel();
-  renderUpcomingEvents();
-  if(document.getElementById('event-module')){
-    renderEventModuleSelect();
-  }
-}
+
 
 function renderEventModuleSelect(){
   const select = document.getElementById('event-module');
@@ -1027,201 +834,8 @@ function getIsoWeek(d){
   const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
   return Math.ceil((((date - yearStart) / 86400000) + 1)/ 7);
 }
-function renderMonthGrid(){
-  const first = new Date(calYear, calMonth, 1);
-  let startOffset = first.getDay() - 1;
-  if(startOffset < 0) startOffset = 6;
-  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
-  const grid = document.getElementById('cal-grid');
-  let html = '';
-  for(let i= 0;
-  i<startOffset;
-  i++) html += '<div class="cal-day blank"></div>';
-  for(let d= 1;
-  d<=daysInMonth;
-  d++){
-    const iso = `${calYear}-${String(calMonth+1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-const isToday = iso === todayISO();
-const isSel = iso === selectedDate;
-const count = state.events.filter(e=> e.date===iso).length;
-html += `<div class="cal-day ${isToday? 'today': ''}
- ${isSel? 'selected': ''}
-" onclick="selectDay('${iso}
-')" ondblclick="openDayView('${iso}
-')">
-      <span class="cal-day-num">${d}
-</span>
-      ${count ? `<span class="cal-day-count">${count}
-</span>` : ''}
 
-      ${eventDotsHtml(iso)}
 
-    </div>`;
-}
-grid.innerHTML = html;
-}
-function renderWeekView(){
-  const wrap = document.getElementById('cal-week-wrap');
-  const days = Array.from({
-    length: 7}
-  , (_, i)=> {
-    const d = new Date(weekStartDate);
-    d.setDate(d.getDate()+i);
-    return d;
-  }
-  );
-  const todayIso = todayISO();
-  let headHtml = '<div class="week-head"><div></div>';
-  days.forEach(d=> {
-    const iso = isoOf(d);
-    headHtml += `<div class="week-head-cell ${iso===todayIso? 'today': ''}
-   ${iso===selectedDate? 'selected': ''}
-" style="cursor:pointer;" onclick="openDayView('${iso}
-')">${DOWS[i7(d)]}
-<span class="wd-num">${d.getDate()}
-</span></div>`;
-}
-);
-headHtml += '</div>';
-let alldayHtml = '<div class="week-allday-row"><div></div>';
-days.forEach(d=> {
-  const iso = isoOf(d);
-  const evts = state.events.filter(e=> e.date===iso && !e.time);
-  alldayHtml += `<div class="week-allday-cell">${evts.map(e=> `<div class="week-allday-chip evt-type-tag ${e.type|| 'termin'}
-" onclick="openDayView('${iso}
-')" title="${escapeHtml(e.title)}
-">${escapeHtml(e.title)}
-</div>`).join('')}
-</div>`;
-}
-);
-alldayHtml += '</div>';
-let bodyHtml = '<div class="week-grid" style="grid-template-rows:repeat(' + WEEK_HOURS.length + ', 38px);">';
-WEEK_HOURS.forEach(hour=> {
-  bodyHtml += `<div class="week-hour-label">${String(hour).padStart(2, '0')}
-:00</div>`;
-days.forEach(d=> {
-  const iso = isoOf(d);
-  const evts = state.events.filter(e=> {
-    if(e.date !== iso || !e.time) return false;
-    const h = parseInt(e.time.slice(0, 2), 10);
-    return h === hour;
-  }
-  );
-  bodyHtml += `<div class="week-col" onclick="selectSlot('${iso}
-', ${hour}
-)">`;
-evts.forEach(e=> {
-  bodyHtml += `<div class="week-evt ${e.type|| 'termin'}
-" title="${escapeHtml(e.time+' '+e.title)}
-" onclick="event.stopPropagation(); openDayView('${iso}
-')">${e.time}
- ${escapeHtml(e.title)}
-</div>`;
-}
-);
-bodyHtml += `</div>`;
-}
-);
-}
-);
-bodyHtml += '</div>';
-wrap.innerHTML = headHtml + alldayHtml + bodyHtml;
-}
-function renderDayTimelineView(){
-  const wrap = document.getElementById('cal-day-wrap');
-  const iso = selectedDate;
-  const alldayEvts = state.events.filter(e=> e.date===iso && !e.time);
-  let alldayHtml = '';
-  if(alldayEvts.length){
-    alldayHtml = '<div class="week-allday-row" style="grid-template-columns:44px 1fr;"><div></div><div class="week-allday-cell">' +
-    alldayEvts.map(e=> `<div class="week-allday-chip evt-type-tag ${e.type|| 'termin'}
-  " title="${escapeHtml(e.title)}
-">${escapeHtml(e.title)}
-</div>`).join('') +
-'</div></div>';
-}
-let bodyHtml = '<div class="week-grid" style="grid-template-columns:44px 1fr; grid-template-rows:repeat(' + WEEK_HOURS.length + ', 38px);">';
-WEEK_HOURS.forEach(hour=> {
-  bodyHtml += `<div class="week-hour-label">${String(hour).padStart(2, '0')}
-:00</div>`;
-const hourEvts = state.events.filter(e=> {
-  if(e.date !== iso || !e.time) return false;
-  const h = parseInt(e.time.slice(0, 2), 10);
-  return h === hour;
-}
-);
-bodyHtml += `<div class="week-col" onclick="selectSlot('${iso}
-', ${hour}
-)">`;
-hourEvts.forEach(e=> {
-  bodyHtml += `<div class="week-evt ${e.type|| 'termin'}
-" title="${escapeHtml(e.time+' '+e.title)}
-" onclick="event.stopPropagation();">${e.time}
- ${escapeHtml(e.title)}
-</div>`;
-}
-);
-bodyHtml += `</div>`;
-}
-);
-bodyHtml += '</div>';
-wrap.innerHTML = alldayHtml + bodyHtml;
-}
-function i7(d){
-  const day = d.getDay();
-  return day===0 ? 6 : day-1;
-}
-function openDayView(iso){
-  selectedDate = iso;
-  setCalViewMode('day');
-}
-function selectDay(iso){
-  selectedDate = iso;
-  if(calViewMode === 'week' || calViewMode === 'day'){
-    renderDayPanel();
-  }
-  else {
-    renderCalendar();
-  }
-}
-function selectSlot(iso, hour){
-  selectedDate = iso;
-  renderDayPanel();
-  setEventTime(String(hour).padStart(2, '0') + ':00');
-  const titleInput = document.getElementById('event-title');
-  if(titleInput) titleInput.focus();
-}
-function getEventTime(){
-  const hour = document.getElementById('event-time-hour')?.value || '';
-  const minute = document.getElementById('event-time-minute')?.value || '';
-  if(!hour && !minute) return '';
-  return `${hour || '00'}:${minute || '00'}`;
-}
-function setEventTime(value = ''){
-  const hourSelect = document.getElementById('event-time-hour');
-  const minuteSelect = document.getElementById('event-time-minute');
-  const [hour = '', minute = ''] = value ? value.split(':') : [];
-  if(hourSelect) hourSelect.value = hour;
-  if(minuteSelect) minuteSelect.value = minute;
-}
-function renderUpcomingEvents(){
-  const upcoming = state.events.filter(e=> e.date >= todayISO()).sort((a,
-  b)=> (a.date+(a.time|| '')).localeCompare(b.date+(b.time|| ''))).slice(0,
-  5);
-  const wrap = document.getElementById('upcoming-events');
-  wrap.innerHTML = upcoming.length ? upcoming.map(e=> `
-    <div class="event-row">
-      <span class="time">${fmtDateShort(e.date)}
-${e.time? ' '+e.time: ''}
-</span>
-      <span class="txt">${escapeHtml(e.title)}
-</span>
-      <span class="evt-type-tag ${e.type|| 'termin'}
-">${EVENT_TYPE_LABELS[e.type]|| 'Termin'}
-</span>
-    </div>`).join('') : '<div class="day-events-empty">Keine bevorstehenden Termine.</div>';
-}
 async function addEvent(){
   const titleInput = document.getElementById('event-title');
   const title = titleInput.value.trim();
@@ -1289,59 +903,8 @@ async function deleteEventSeries(recurId){
   renderCalendar();
   renderDashboard();
 }
-function icsEscape(s){
-  return String(s|| '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g,
-  '\\,').replace(/\n/g, '\\n');
-}
-function icsDateStamp(){
-  return new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-}
-function exportIcs(){
-  if(!state.events.length){
-    alert('Es sind noch keine Termine im Kalender.');
-    return;
-  }
-  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Lernraum//DE',
-  'CALSCALE:GREGORIAN'];
-  state.events.forEach(e=> {
-    const dateCompact = e.date.replace(/-/g, '');
-    lines.push('BEGIN:VEVENT');
-    lines.push('UID:' + e.id + '@lernraum');
-    lines.push('DTSTAMP:' + icsDateStamp());
-    if(e.time){
-      const [hh, mm] = e.time.split(':');
-      const startCompact = dateCompact + 'T' + hh + mm + '00';
-      const endDate = new Date(e.date+'T'+e.time+':00');
-      endDate.setHours(endDate.getHours()+1);
-      const endCompact = isoOf(endDate).replace(/-/g, '') + 'T' + String(endDate.getHours()).padStart(2,
-      '0') + String(endDate.getMinutes()).padStart(2, '0') + '00';
-      lines.push('DTSTART:' + startCompact);
-      lines.push('DTEND:' + endCompact);
-    }
-    else {
-      const endDate = new Date(e.date+'T00:00:00');
-      endDate.setDate(endDate.getDate()+1);
-      lines.push('DTSTART;VALUE=DATE:' + dateCompact);
-      lines.push('DTEND;VALUE=DATE:' + isoOf(endDate).replace(/-/g, ''));
-    }
-    lines.push('SUMMARY:' + icsEscape(e.title));
-    lines.push('CATEGORIES:' + icsEscape(EVENT_TYPE_LABELS[e.type] || 'Termin'));
-    lines.push('END:VEVENT');
-  }
-  );
-  lines.push('END:VCALENDAR');
-  const blob = new Blob([lines.join('\r\n')], {
-    type: 'text/calendar;charset=utf-8'}
-  );
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'lernraum-kalender.ics';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
+
+
 function renderFlashcards(){
   renderFcFolderChips();
   renderFcManage();
@@ -1804,49 +1367,7 @@ return `
 </span>
   `;
 }
-function renderGame(){
-  const wrap = document.getElementById('game-content');
-  if(!wrap) return;
-  if(gameCards.length < 2){
-    wrap.innerHTML = '<div class="empty"><span class="emoji">\u{1F3AE}</span>Du brauchst mindestens 2 Karteikarten mit Begriff und Bedeutung in dieser Kategorie, um zu spielen.</div>';
-    return;
-  }
-  if(gameOver){
-    const isNew = gameScore === gameHighscore && gameScore > 0;
-    wrap.innerHTML = `
-      <div class="game-over">
-        <div class="big-num">${gameScore}
-  </div>
-        <p>Punkte erreicht</p>
-        <div class="game-high ${isNew? 'new': ''}
-">${isNew ? 'Neuer Rekord!' : 'Rekord: ' + gameHighscore + ' Punkte'}
-</div>
-        <div class="study-finish-actions">
-          <button class="btn" onclick="startGame()">
-Nochmal spielen</button>
-          <button class="btn ghost" onclick="setFcMode('manage')">
-Fertig</button>
-        </div>
-      </div>
-    `;
-return;
-}
-wrap.innerHTML = `
-    <div class="game-topbar" id="game-topbar">${gameTopbarHtml()}
-</div>
-    <div class="game-timerbar-track"><div class="game-timerbar-fill" id="game-timerbar-fill" style="width:100%;">
-</div></div>
-    <div class="game-question-card">${escapeHtml(gameQuestion.front) || '(ohne Begriff)'}
-</div>
-    <div class="game-options-grid">
-      ${gameOptions.map((opt, i) => `<button class="game-option-btn" data-value="${escapeHtml(opt)}
-" onclick="answerGame(this.dataset.value)"><span class="game-option-num">${i+1}
-</span>${escapeHtml(opt) || '(leer)'}
-</button>`).join('')}
 
-    </div>
-  `;
-}
 function startStudySession(indices){
   const now = Date.now();
   const sorted = [...indices].sort((a, b)=> {
@@ -1922,17 +1443,7 @@ function flipCard(){
   flipped = !flipped;
   document.getElementById('flip-card').classList.toggle('flipped');
 }
-function shuffleStudy(){
-  for(let i= studyOrder.length-1;
-  i>0;
-  i--){
-    const j = Math.floor(Math.random()* (i+1));
-    [studyOrder[i], studyOrder[j]] = [studyOrder[j], studyOrder[i]];
-  }
-  studyIndex = 0;
-  flipped = false;
-  renderStudy();
-}
+
 document.addEventListener('keydown', (e)=> {
   const tag = (e.target && e.target.tagName) || '';
   if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
@@ -1966,11 +1477,7 @@ document.addEventListener('keydown', (e)=> {
   }
 }
 );
-function setDocFolderFilter(id){
-  docFolderFilter = id;
-  renderDocFolderChips();
-  renderDocList();
-}
+
 
 window.setNoteModuleFilter = function(id){
   noteModuleFilter = id;
@@ -2002,18 +1509,7 @@ async function addDocFolder(){
   await saveStats();
   renderDocFolderChips();
 }
-async function deleteDocFolder(id){
-  state.docFolders = state.docFolders.filter(f=> f.id!==id);
-  state.docs.forEach(d=> {
-    if(d.folderId===id) d.folderId = null;
-  }
-  );
-  await save('lernraum_doc_folders', state.docFolders);
-  await save('lernraum_docs_index', state.docs);
-  if(docFolderFilter===id) docFolderFilter = 'alle';
-  renderDocFolderChips();
-  renderDocList();
-}
+
 function fmtBytes(n){
   if(n < 1024) return n + ' B';
   if(n < 1024* 1024) return (n/ 1024).toFixed(0) + ' KB';
@@ -2054,7 +1550,8 @@ async function init(){
   renderNotesList();
   renderTodos();
   renderModules();
-  renderCalendar();
+  /* Der Kalender kommt aus calendar-redesign-v3.js und ist beim ersten Start evtl. noch nicht geladen */
+  if(typeof renderCalendar === 'function') renderCalendar();
   renderFlashcards();
   renderFlashcardModuleFilter();
   renderDocFolderChips();
@@ -2131,9 +1628,6 @@ let studyPlans = [];
 let lrEditingPlanId = null;
 let showTrash = false;
 let editingEventId = null;
-let pomodoroRounds = 0;
-let currentPomodoroMode = 'focus';
-let sessionStartedAt = null;
 function notify(message, type= 'ok'){
   const wrap= document.getElementById('toast-wrap');
   if(!wrap) return;
@@ -2351,50 +1845,8 @@ async function updateStorageMeter(){
   const el=document.getElementById('storage-meter');
   if(el) el.style.display='none';
 }
-async function exportBackup(){
-  const payload= {
-    version: 2, created: new Date().toISOString(), data: {
-      ...state, stats, learningHistory, studyPlans, gameHighscore}
-    , files: []}
-  ;
-  for(const d of state.docs){
-    try{
-      const blob= await idbGetFile(d.id);
-      if(blob){
-        const data= await blobToDataUrl(blob);
-        payload.files.push({
-          id: d.id, data}
-        );
-      }
-    }
-    catch(e){
-    }
-  }
-  downloadText(JSON.stringify(payload), 'lernraum-backup-'+todayISO()+'.json',
-  'application/json');
-  notify('Backup erstellt.');
-}
-function blobToDataUrl(blob){
-  return new Promise((res, rej)=> {
-    const r= new FileReader();
-    r.onload= ()=> res(r.result);
-    r.onerror= rej;
-    r.readAsDataURL(blob);
-  }
-  );
-}
-function dataUrlToBlob(data){
-  const [h, b]= data.split(',');
-  const mime= (h.match(/:(.*?);/)|| [])[1]|| 'application/octet-stream';
-  const bin= atob(b);
-  const a= new Uint8Array(bin.length);
-  for(let i= 0;
-  i<bin.length;
-  i++)a[i]= bin.charCodeAt(i);
-  return new Blob([a], {
-    type: mime}
-  );
-}
+
+
 function downloadText(text, name, type= 'text/plain'){
   const u= URL.createObjectURL(new Blob([text], {
     type}
@@ -2405,36 +1857,8 @@ function downloadText(text, name, type= 'text/plain'){
   a.click();
   setTimeout(()=> URL.revokeObjectURL(u), 1000);
 }
-async function importBackup(evt){
-  const f= evt.target.files[0];
-  evt.target.value= '';
-  if(!f)return;
-  if(!(await confirmAction('Vorhandene Daten durch dieses Backup ersetzen?')))return;
-  try{
-    const p= JSON.parse(await f.text());
-    if(!p.data|| !p.version)throw 0;
-    Object.assign(state, p.data);
-    stats= p.data.stats|| defaultStats();
-    learningHistory= p.data.learningHistory|| [];
-    studyPlans= p.data.studyPlans|| [];
-    gameHighscore= p.data.gameHighscore|| 0;
-    for(const x of p.files|| [])await idbPutFile(x.id, dataUrlToBlob(x.data));
-    await persistAll();
-    renderAllEnhanced();
-    notify('Backup importiert.');
-  }
-  catch(e){
-    notify('Ung\u00FCltige Backup-Datei.', 'error');
-  }
-}
-async function persistAll(){
-  await Promise.all([save('lernraum_notes', state.notes), save('lernraum_todos',
-  state.todos), save('lernraum_events', state.events), save('lernraum_flashcards',
-  state.cards), save('lernraum_card_folders', state.cardFolders), save('lernraum_doc_folders',
-  state.docFolders), save('lernraum_docs_index', state.docs), save('lernraum_note_folders',
-  state.noteFolders), save('lernraum_stats', stats), save('lernraum_learning_history',
-  learningHistory), save('lernraum_study_plans', studyPlans)]);
-}
+
+
 function runGlobalSearch(q){
   const wrap= document.getElementById('global-search-results');
   q= q.trim().toLowerCase();
@@ -2523,9 +1947,7 @@ function renderNoteEditor(){
   document.getElementById('note-cancel-btn')?.addEventListener('click',async()=>{const isEmpty=!(note.title||'').trim()&&!(note.content||'').trim();if(isEmpty&&!note.savedOnce){state.notes=state.notes.filter(n=>n.id!==note.id);await save('lernraum_notes',state.notes);}selectedNoteId=null;renderNotesList();});
   document.getElementById('note-save-btn')?.addEventListener('click',async()=>{capture();if(!note.title&&!note.content.trim()){document.getElementById('note-title')?.focus();return;}note.savedOnce=true;note.updated=Date.now();await save('lernraum_notes',state.notes);selectedNoteId=null;renderNotesList();renderDashboard();if(typeof notify==='function')notify('Notiz gespeichert.');});
 }
-async function toggleNoteFavorite(id){
-  const note=state.notes.find(item=>item.id===id);if(!note)return;note.favorite=!note.favorite;note.updated=Date.now();await save('lernraum_notes',state.notes);renderNotesList();
-}
+
 async function deleteNote(id){
   const note=state.notes.find(item=>item.id===id); if(!note) return;
   if(!window.confirm('Notiz in den Papierkorb verschieben?')) return;
@@ -2538,10 +1960,7 @@ async function restoreNote(id){
 async function permanentlyDeleteNote(id){
   const note=state.notes.find(item=>item.id===id);if(!note)return;if(!window.confirm('Notiz endgültig löschen?'))return;state.notes=state.notes.filter(item=>item.id!==id);selectedNoteId=null;await save('lernraum_notes',state.notes);renderNotesList();if(typeof notify==='function')notify('Notiz endgültig gelöscht.');
 }
-function dueCardIndices(){
-  const now= Date.now();
-  return getFilteredCardIndices().filter(i=> (state.cards[i].dueDate?? 0)<=now);
-}
+
 function updateDueCardIndicators(){
   const n = state.cards.filter(c => (c.dueDate ?? 0) <= Date.now()).length;
   const dashboardCount = document.getElementById('dash-due-cards');
@@ -2549,12 +1968,7 @@ function updateDueCardIndicators(){
     dashboardCount.textContent = n + (n === 1 ? ' Karteikarte wartet' : ' Karteikarten warten');
   }
 }
-function openDueCards(){
-  activateView('cards');
-  fcFolderFilter= 'alle';
-  setFcMode('study');
-  startStudySession(dueCardIndices());
-}
+
 function renderStudy(){
   const wrap=document.getElementById('study-content');
   if(!wrap) return;
@@ -2626,49 +2040,8 @@ function parseCsvLine(line){
   out.push(cur);
   return out;
 }
-function renderDayPanel(){
-  const d= new Date(selectedDate+'T00:00:00');
-  document.getElementById('day-panel-title').textContent= d.toLocaleDateString('de-DE',
-  {
-    weekday: 'long', day: 'numeric', month: 'long'}
-  );
-  const dateInput= document.getElementById('event-date');
-  if(dateInput)dateInput.value= selectedDate;
-  const evts= state.events.filter(e=> e.date===selectedDate).sort((a, b)=> (a.time|| '').localeCompare(b.time|| ''));
-  const wrap= document.getElementById('day-events');
-  wrap.innerHTML= evts.length? evts.map(e=> `<div class="event-row"><span class="time">${e.time|| 'ganzt\u00E4gig'}
-${e.endTime? '\u2013'+e.endTime: ''}
-</span><span class="txt"><strong>${escapeHtml(e.title)}
-</strong>${e.location? `<small>${escapeHtml(e.location)}
-</small>`: ''}
-</span><span class="evt-type-tag ${e.type|| 'termin'}
-">${EVENT_TYPE_LABELS[e.type]|| 'Termin'}
-</span><button class="icon-btn" onclick="editEvent('${e.id}
-')" title="Bearbeiten">\u270E</button><button class="icon-btn" onclick="deleteEvent('${e.id}
-')">\u2715</button></div>`).join(''): '<div class="day-events-empty">Keine Termine an diesem Tag.</div>';
-}
-function editEvent(id){
-  const e= state.events.find(x=> x.id===id);
-  if(!e)return;
-  editingEventId= id;
-  const [h= '', m= '']= (e.time|| '').split(':');
-  document.getElementById('event-date').value= e.date;
-  document.getElementById('event-time-hour').value= h;
-  document.getElementById('event-time-minute').value= m;
-  document.getElementById('event-title').value= e.title;
-  document.getElementById('event-module').value= e.moduleId|| '';
-  openModal(`<h2>Termin bearbeiten</h2><div class="modal-form"><label>Endzeit<input id="edit-end-time" type="time" value="${e.endTime|| ''}
-"></label><label>Ort<input id="edit-location" type="text" value="${escapeHtml(e.location|| '')}
-"></label><label>Beschreibung<textarea id="edit-description">${escapeHtml(e.description|| '')}
-</textarea></label><label>Erinnerung<select id="edit-reminder"><option value="0">
-Keine</option><option value="10" ${e.reminder==10? 'selected': ''}
->10 Minuten vorher</option><option value="30" ${e.reminder==30? 'selected': ''}
->30 Minuten vorher</option><option value="60" ${e.reminder==60? 'selected': ''}
->1 Stunde vorher</option><option value="1440" ${e.reminder==1440? 'selected': ''}
->1 Tag vorher</option></select></label><div class="modal-actions"><button class="btn ghost" onclick="closeModal()">
-Abbrechen</button><button class="btn" onclick="saveEventEdit()">Speichern</button>
-</div></div>`);
-}
+
+
 async function saveEventEdit(){
   const e= state.events.find(x=> x.id===editingEventId);
   if(!e)return;
@@ -2718,36 +2091,15 @@ function localDateKey(ts= Date.now()){
 async function logLearningSession(seconds, subject= 'Allgemein', kind= 'focus'){
   if(seconds<10)return;
   learningHistory.push({
-    id: uid(), date: localDateKey(), started: sessionStartedAt|| Date.now()-seconds* 1000,
+    id: uid(), date: localDateKey(), started: Date.now()-seconds* 1000,
     seconds, subject: subject.trim()|| 'Allgemein', kind}
   );
   await save('lernraum_learning_history', learningHistory);
   renderDashboardEnhancements();
 }
-function setPomodoroMode(mode){
-  currentPomodoroMode= mode;
-  const mins= {
-    focus: 25, short: 5, long: 15, custom: 30}
-  [mode];
-  setLernuhrPreset(mins);
-}
-const originalStartLernuhr= startLernuhr;
-startLernuhr= function(){
-  if(!lernuhrRunning)sessionStartedAt= Date.now();
-  originalStartLernuhr();
-}
-;
-const originalPauseLernuhr= pauseLernuhr;
-pauseLernuhr= function(){
-  const was= lernuhrRunning, elapsed= sessionStartedAt? Math.floor((Date.now()-sessionStartedAt)/ 1000): 0;
-  originalPauseLernuhr();
-  if(was&& elapsed>=10){
-    logLearningSession(elapsed, document.getElementById('pomodoro-subject')?.value|| 'Allgemein',
-    currentPomodoroMode);
-    sessionStartedAt= null;
-  }
-}
-;
+
+
+
 function renderLearningStats(){
   const grid = document.getElementById('learning-stat-grid');
   if(!grid) return;
@@ -3091,7 +2443,8 @@ function renderAllEnhanced(){
   renderNotesList();
   renderTodos();
   renderModules();
-  renderCalendar();
+  /* Der Kalender kommt aus calendar-redesign-v3.js und ist beim ersten Start evtl. noch nicht geladen */
+  if(typeof renderCalendar === 'function') renderCalendar();
   renderFlashcards();
   renderDocFolderChips();
   renderDocList();
@@ -3403,9 +2756,6 @@ function setSimpleLernuhrMode(mode){
     .getElementById('lernuhr-mode-pause')
     ?.classList.toggle('active', mode === 'pause');
 
-  currentPomodoroMode = mode === 'lernen'
-    ? 'focus'
-    : 'break';
 
   applySimpleLernuhrMinutes();
 
@@ -3447,30 +2797,11 @@ function applySimpleLernuhrMinutes(){
 
 
 /* Alte Funktionen kompatibel halten */
-setLernuhrPreset = function(min){
-  const input = document.getElementById('lernuhr-custom-minutes');
-
-  if(input){
-    input.value = min || '';
-  }
-
-  lernuhrSimpleMinutes = min || '';
-
-  pauseLernuhr();
-  applySimpleLernuhrMinutes();
-};
-
-
-setPomodoroMode = function(mode){
-  setSimpleLernuhrMode(
-    mode === 'focus' ? 'lernen' : 'pause'
-  );
-};
 
 
 /* ---------- ANZEIGE ---------- */
 
-renderLernuhr = function(){
+function renderLernuhr(){
   const timeEl = document.getElementById('lernuhr-time');
   const toggleBtn = document.getElementById('lernuhr-toggle');
   const status = document.getElementById('lernuhr-simple-status');
@@ -3516,21 +2847,21 @@ renderLernuhr = function(){
           : 'Bereit für Pause';
     }
   }
-};
+}
 
 
 /* ---------- START / STOP ---------- */
 
-toggleLernuhr = function(){
+function toggleLernuhr(){
   if(lernuhrRunning){
     pauseLernuhr();
   } else {
     startLernuhr();
   }
-};
+}
 
 
-startLernuhr = function(){
+function startLernuhr(){
   if(lernuhrRunning) return;
 
   if(lernuhrRemaining <= 0){
@@ -3613,10 +2944,10 @@ startLernuhr = function(){
     renderLernuhr();
 
   }, 1000);
-};
+}
 
 
-pauseLernuhr = function(){
+function pauseLernuhr(){
   if(!lernuhrRunning){
     renderLernuhr();
     return;
@@ -3653,12 +2984,12 @@ pauseLernuhr = function(){
   saveStats();
 
   renderLernuhr();
-};
+}
 
 
 /* ---------- NEUSTART ---------- */
 
-resetLernuhr = async function(){
+async function resetLernuhr(){
   lernuhrRunning = false;
 
   if(lernuhrInterval){
@@ -3685,14 +3016,11 @@ resetLernuhr = async function(){
   await saveStats();
 
   renderLernuhr();
-};
+}
 
 
 /* ---------- STARTZUSTAND ---------- */
 
-lernuhrRunning = false;
-lernuhrTotal = 0;
-lernuhrRemaining = 0;
 
 buildSimpleLernuhr();
 
@@ -4063,30 +3391,6 @@ setTimeout(
 /* ============================================================
    APPLE KALENDER
 ============================================================ */
-
-function syncAppleCalendar(){
-
-  const feedUrl = localStorage.getItem(
-    'lernraum_apple_calendar_feed'
-  );
-
-  if(!feedUrl){
-
-    alert(
-      'Der Apple-Kalender-Link wird noch eingerichtet.'
-    );
-
-    return;
-  }
-
-  const webcalUrl =
-    feedUrl.replace(
-      /^https?:\/\//,
-      'webcal://'
-    );
-
-  window.location.href = webcalUrl;
-}
 
 
 /* ============================================================
@@ -6708,68 +6012,13 @@ function answerGameFixed(chosen) {
 })();
 
 /* ============================================================
-   WEBSITE-LERNZEIT
-   Misst aktive Zeit auf der Website.
-   Nach 5 Minuten ohne Aktivität wird pausiert.
+   DASHBOARD-LERNZEIT (Lernuhr-Sitzungen der letzten 7 Tage, live)
 ============================================================ */
 (function(){
   'use strict';
 
-  const STORAGE_KEY = 'lernraum_site_learning_time_v1';
-  const IDLE_LIMIT_MS = 5 * 60 * 1000;
-  const TICK_MS = 1000;
-
-  let lastActivityAt = Date.now();
-  let lastTickAt = Date.now();
-  let active = !document.hidden;
-
-  function siteDateKey(date = new Date()){
-    return [
-      date.getFullYear(),
-      String(date.getMonth() + 1).padStart(2, '0'),
-      String(date.getDate()).padStart(2, '0')
-    ].join('-');
-  }
-
-  function loadSiteLearningTime(){
-    try{
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const data = raw ? JSON.parse(raw) : {};
-      return data && typeof data === 'object' ? data : {};
-    }catch(e){
-      return {};
-    }
-  }
-
-  function saveSiteLearningTime(data){
-    try{
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    }catch(e){}
-  }
-
-  function addActiveSeconds(seconds){
-    if(seconds <= 0) return;
-
-    const data = loadSiteLearningTime();
-    const key = siteDateKey();
-
-    data[key] = Math.max(0, Number(data[key]) || 0) + seconds;
-    saveSiteLearningTime(data);
-  }
-
-  function siteWeekSeconds(){
-    const data = loadSiteLearningTime();
-    let total = 0;
-
-    for(let i = 0; i < 7; i++){
-      const d = new Date();
-      d.setHours(0,0,0,0);
-      d.setDate(d.getDate() - i);
-      total += Number(data[siteDateKey(d)]) || 0;
-    }
-
-    return Math.floor(total);
-  }
+  /* Alter Website-Zeitzähler wird nicht mehr genutzt */
+  try{ localStorage.removeItem('lernraum_site_learning_time_v1'); }catch(e){}
 
   function formatSiteLearningTime(seconds){
     const h = Math.floor(seconds / 3600);
@@ -6817,52 +6066,7 @@ function answerGameFixed(chosen) {
     }
   }
 
-  function markActivity(){
-    lastActivityAt = Date.now();
-    active = !document.hidden;
-  }
-
-  function tick(){
-    const now = Date.now();
-    const elapsed = Math.max(0, Math.min(2, (now - lastTickAt) / 1000));
-    lastTickAt = now;
-
-    if(!document.hidden && active){
-      addActiveSeconds(elapsed);
-    }
-
-    updateSiteLearningDashboard();
-  }
-
-  [
-    'mousemove',
-    'mousedown',
-    'keydown',
-    'scroll',
-    'touchstart',
-    'pointermove',
-    'pointerdown'
-  ].forEach(eventName => {
-    window.addEventListener(eventName, markActivity, { passive:true });
-  });
-
-  document.addEventListener('visibilitychange', () => {
-    lastTickAt = Date.now();
-
-    if(document.hidden){
-      active = false;
-    }else{
-      active = true;
-      lastActivityAt = Date.now();
-    }
-  });
-
-  window.addEventListener('focus', markActivity);
-  window.addEventListener('blur', () => {
-    active = false;
-  });
-
-  setInterval(tick, TICK_MS);
+  setInterval(updateSiteLearningDashboard, 1000);
 
   if(document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', updateSiteLearningDashboard);

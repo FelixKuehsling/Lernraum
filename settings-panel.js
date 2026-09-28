@@ -22,16 +22,15 @@ function updateSyncStatus() {
   const logoutSection = document.getElementById('sync-logout-section');
   const actionsSection = document.getElementById('sync-actions-settings');
 
-  // Check if user is logged in (check localStorage or Supabase session)
-  const user = localStorage.getItem('lernraum_user');
-  const email = localStorage.getItem('lernraum_user_email');
-
-  const isLoggedIn = !!(user && email);
+  // Angemeldet? Aktive Supabase-Sitzung (sync.js) oder gespeicherter Login
+  const sessionUser = (typeof lernraumSyncUser !== 'undefined' && lernraumSyncUser) ? lernraumSyncUser : null;
+  const email = sessionUser?.email || localStorage.getItem('lernraum_user_email') || '';
+  const isLoggedIn = !!(sessionUser || localStorage.getItem('lernraum_user'));
 
   // Update Settings Panel if visible
   if (statusText) {
     if (isLoggedIn) {
-      statusText.textContent = `✅ Angemeldet als ${email}`;
+      statusText.textContent = email ? `✅ Angemeldet als ${email}` : '✅ Angemeldet';
     } else {
       statusText.textContent = '❌ Nicht verbunden';
     }
@@ -41,39 +40,21 @@ function updateSyncStatus() {
   if (actionsSection) actionsSection.style.display = isLoggedIn ? 'none' : 'flex';
 }
 
-// Login Flow
-async function initiateSyncLogin() {
-  // This will open the sync panel from sync.js
-  if (typeof openSyncLoginModal === 'function') {
-    openSyncLoginModal();
-  } else {
-    // Fallback: trigger sync button click
-    const syncBtn = document.getElementById('lernraum-sync-button');
-    if (syncBtn) syncBtn.click();
-  }
+// Login / Sync-Fenster (sync.js)
+function initiateSyncLogin() {
+  if (typeof openSyncDialog === 'function') openSyncDialog();
 }
 
-// Logout Flow
-async function initiateSyncLogout() {
-  if (typeof logoutLernraum === 'function') {
-    await logoutLernraum();
-    updateSyncStatus();
-    alert('Abgemeldet!');
-  } else if (typeof signOut === 'function') {
-    await signOut();
-    updateSyncStatus();
-    alert('Abgemeldet!');
-  }
-}
-
-// Open Sync Panel
 function openSyncPanel() {
-  if (typeof triggerSyncPanel === 'function') {
-    triggerSyncPanel();
-  } else {
-    const syncBtn = document.getElementById('lernraum-sync-button');
-    if (syncBtn) syncBtn.click();
-  }
+  if (typeof openSyncDialog === 'function') openSyncDialog();
+}
+
+// Abmelden
+async function initiateSyncLogout() {
+  if (typeof logoutLernraum !== 'function') return;
+  await logoutLernraum();
+  updateSyncStatus();
+  if (typeof notify === 'function') notify('Abgemeldet.');
 }
 
 // Initialize on load

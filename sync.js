@@ -23,29 +23,7 @@ let lernraumSyncUser = null;
 let lernraumSyncTimer = null;
 let lernraumSyncIsApplying = false;
 let lernraumLastSyncAt = null;
-
-// Fallback updateSyncStatus wenn settings-panel.js nicht geladen
-function updateSyncStatus() {
-  const user = localStorage.getItem('lernraum_user');
-  const email = localStorage.getItem('lernraum_user_email');
-
-  // Update Settings Panel if exists
-  const statusText = document.getElementById('sync-status-text');
-  if (statusText) {
-    if (user && email) {
-      statusText.textContent = `✅ Angemeldet als ${email}`;
-    } else {
-      statusText.textContent = '❌ Nicht verbunden';
-    }
-  }
-
-  // Update Logout Section
-  const logoutSection = document.getElementById('sync-logout-section');
-  if (logoutSection) {
-    logoutSection.style.display = (user && email) ? 'block' : 'none';
-  }
-}
-
+let lernraumCloudReady = false;
 
 /* =========================================================
    SYNC BUTTON
@@ -74,43 +52,16 @@ function updateSyncButton() {
   }
 
   updateLastSyncStatus();
+
+  if (typeof updateSyncStatus === 'function') {
+    updateSyncStatus();
+  }
 }
 
 
 /* =========================================================
    LETZTE SYNCHRONISIERUNG
 ========================================================= */
-
-function createLastSyncStatus() {
-  if (document.getElementById('lernraum-sync-status')) return;
-
-  const button = document.getElementById('lernraum-sync-button');
-
-  if (!button) return;
-
-  const status = document.createElement('div');
-
-  status.id = 'lernraum-sync-status';
-
-  status.style.cssText = `
-    margin-top:5px;
-    margin-bottom:2px;
-    text-align:center;
-    font-family:inherit;
-    font-size:10px;
-    line-height:1.3;
-    color:var(--ink);
-    opacity:.55;
-  `;
-
-  button.insertAdjacentElement(
-    'afterend',
-    status
-  );
-
-  updateLastSyncStatus();
-}
-
 
 function updateLastSyncStatus() {
   const status = document.getElementById('lernraum-sync-status');
@@ -727,6 +678,9 @@ async function logoutLernraum() {
 
   lernraumSyncUser = null;
   lernraumLastSyncAt = null;
+  lernraumCloudReady = false;
+  clearTimeout(lernraumSyncTimer);
+  lernraumSyncTimer = null;
 
   // Lösche User aus localStorage
   localStorage.removeItem('lernraum_user');
@@ -1106,6 +1060,8 @@ async function applyLernraumSnapshot(snapshot) {
 async function initializeCloudAfterLogin() {
   if (!lernraumSyncUser) return;
 
+  lernraumCloudReady = false;
+
   const { data, error } =
     await supabaseClient
       .from('lernraum_sync')
@@ -1140,58 +1096,98 @@ async function initializeCloudAfterLogin() {
   } else {
     await uploadLernraumData();
   }
+
+  lernraumCloudReady = true;
 }
 
 
 /* =========================================================
    AUTOMATISCHER SYNC
+   Jede Änderung (save) wird kurz danach in die Cloud geladen.
+   Erst nachdem die Cloud-Daten beim Start geladen wurden –
+   sonst könnte ein veralteter Stand die Cloud überschreiben.
 ========================================================= */
+
 
 function scheduleCloudSync() {
   if (
     !lernraumSyncUser ||
+    !lernraumCloudReady ||
     lernraumSyncIsApplying
   ) {
     return;
   }
 
-  clearTimeout(
-    lernraumSyncTimer
-  );
+  clearTimeout(lernraumSyncTimer);
 
-  lernraumSyncTimer =
-    setTimeout(
-      () => {
-        uploadLernraumData();
-      },
-      1200
-    );
+  lernraumSyncTimer = setTimeout(() => {
+    lernraumSyncTimer = null;
+    uploadLernraumData();
+  }, 2000);
 }
 
+/* save() aus app-v1.js erweitern. Muss nach dem Laden von
+   app-v1.js passieren (das wird mit „defer“ geladen), daher
+   Aufruf beim Start in initLernraumSync(). */
+function installCloudSyncHook() {
+  if (typeof window.save !== 'function' || window.save.lernraumCloudHook) {
+    return;
+  }
 
-/* =========================================================
-   SAVE ERWEITERN
-========================================================= */
+  const originalSave = window.save;
 
-const originalLernraumSave =
-  window.save;
+  const wrappedSave = async function (key, ...rest) {
+    const result = await originalSave.call(this, key, ...rest);
 
-if (
-  typeof originalLernraumSave ===
-  'function'
-) {
-  window.save =
-    async function (...args) {
-      const result =
-        await originalLernraumSave(
-          ...args
-        );
-
+    /* Statistik wird während der Lernuhr alle paar Sekunden
+       gespeichert – dafür nicht jedes Mal hochladen. */
+    if (key !== 'lernraum_stats') {
       scheduleCloudSync();
+    }
 
-      return result;
-    };
+    return result;
+  };
+
+  wrappedSave.lernraumCloudHook = true;
+  window.save = wrappedSave;
 }
+
+/* Wenn die Seite wieder in den Vordergrund kommt: neuere
+   Cloud-Daten (z. B. vom Handy) übernehmen. */
+async function refreshFromCloudIfNewer() {
+  if (!lernraumSyncUser || lernraumSyncIsApplying || lernraumSyncTimer) {
+    return;
+  }
+
+  /* Start-Abgleich war fehlgeschlagen (z. B. offline) → erneut versuchen */
+  if (!lernraumCloudReady) {
+    await initializeCloudAfterLogin();
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from('lernraum_sync')
+    .select('updated_at')
+    .eq('user_id', lernraumSyncUser.id)
+    .maybeSingle();
+
+  if (error || !data?.updated_at) return;
+
+  const cloudTime = new Date(data.updated_at).getTime();
+  const localTime = lernraumLastSyncAt
+    ? new Date(lernraumLastSyncAt).getTime()
+    : 0;
+
+  if (cloudTime > localTime && !lernraumSyncTimer) {
+    await downloadLernraumData();
+  }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    refreshFromCloudIfNewer();
+  }
+});
 
 
 /* =========================================================
@@ -1221,6 +1217,7 @@ async function syncNow() {
 ========================================================= */
 
 async function initLernraumSync() {
+  installCloudSyncHook();
   createSyncUi();
 
   const {
@@ -1271,716 +1268,3 @@ window.addEventListener(
   'DOMContentLoaded',
   initLernraumSync
 );
-
-/* ============================================================
-   LERNRAUM – APPLE KALENDER SYNC
-   Lernraum → Apple Kalender
-============================================================ */
-
-const APPLE_CAL_BUCKET = 'calendar-feeds';
-const APPLE_CAL_TOKEN_KEY = 'lernraum_apple_calendar_token';
-
-
-/* ---------- ZUFÄLLIGEN KALENDER-TOKEN ERZEUGEN ---------- */
-
-function getAppleCalendarToken(){
-
-  let token = localStorage.getItem(
-    APPLE_CAL_TOKEN_KEY
-  );
-
-  if(!token){
-
-    if(window.crypto?.randomUUID){
-      token = crypto.randomUUID();
-    } else {
-      token =
-        Date.now().toString(36) +
-        Math.random().toString(36).slice(2) +
-        Math.random().toString(36).slice(2);
-    }
-
-    localStorage.setItem(
-      APPLE_CAL_TOKEN_KEY,
-      token
-    );
-  }
-
-  return token;
-}
-
-
-/* ---------- TEXT FÜR .ICS SICHER MACHEN ---------- */
-
-function appleIcsEscape(value){
-
-  return String(value || '')
-    .replace(/\\/g, '\\\\')
-    .replace(/\n/g, '\\n')
-    .replace(/;/g, '\\;')
-    .replace(/,/g, '\\,');
-}
-
-
-/* ---------- DATUM YYYY-MM-DD → YYYYMMDD ---------- */
-
-function appleDateCompact(value){
-
-  return String(value || '')
-    .replace(/-/g, '');
-}
-
-
-/* ---------- ZEIT IN KALENDERFORMAT ---------- */
-
-function appleDateTimeCompact(date, time){
-
-  const hhmm =
-    String(time || '00:00')
-      .replace(':', '');
-
-  return (
-    appleDateCompact(date) +
-    'T' +
-    hhmm +
-    '00'
-  );
-}
-
-
-/* ---------- GANZEN LERNRAUM-KALENDER ALS ICS BAUEN ---------- */
-
-function buildAppleCalendarIcs(){
-
-  const lines = [
-
-    'BEGIN:VCALENDAR',
-
-    'VERSION:2.0',
-
-    'PRODID:-//Lernraum//Apple Calendar//DE',
-
-    'CALSCALE:GREGORIAN',
-
-    'METHOD:PUBLISH',
-
-    'X-WR-CALNAME:Lernraum',
-
-    'X-WR-TIMEZONE:Europe/Berlin',
-
-    'REFRESH-INTERVAL;VALUE=DURATION:PT1H',
-
-    'X-PUBLISHED-TTL:PT1H'
-
-  ];
-
-
-  const events =
-    Array.isArray(state?.events)
-      ? [...state.events]
-      : [];
-
-
-  events.forEach(event => {
-
-    if(!event?.date) return;
-
-
-    lines.push('BEGIN:VEVENT');
-
-
-    /* feste UID = Apple erkennt spätere Änderungen */
-
-    lines.push(
-      'UID:' +
-      appleIcsEscape(event.id || uid()) +
-      '@lernraum'
-    );
-
-
-    lines.push(
-      'DTSTAMP:' +
-      new Date()
-        .toISOString()
-        .replace(/[-:]/g, '')
-        .replace(/\.\d{3}Z$/, 'Z')
-    );
-
-
-    /* ---------- TERMIN MIT UHRZEIT ---------- */
-
-    if(event.time){
-
-      lines.push(
-        'DTSTART;TZID=Europe/Berlin:' +
-        appleDateTimeCompact(
-          event.date,
-          event.time
-        )
-      );
-
-
-      if(event.endTime){
-
-        lines.push(
-          'DTEND;TZID=Europe/Berlin:' +
-          appleDateTimeCompact(
-            event.date,
-            event.endTime
-          )
-        );
-
-      } else {
-
-        /* Standard: 1 Stunde */
-
-        const start =
-          new Date(
-            `${event.date}T${event.time}:00`
-          );
-
-        start.setHours(
-          start.getHours() + 1
-        );
-
-
-        const endDate =
-          localISODate(start);
-
-
-        const endTime =
-          String(
-            start.getHours()
-          ).padStart(2, '0') +
-          ':' +
-          String(
-            start.getMinutes()
-          ).padStart(2, '0');
-
-
-        lines.push(
-          'DTEND;TZID=Europe/Berlin:' +
-          appleDateTimeCompact(
-            endDate,
-            endTime
-          )
-        );
-
-      }
-
-    }
-
-
-    /* ---------- GANZTÄGIGER TERMIN ---------- */
-
-    else {
-
-      lines.push(
-        'DTSTART;VALUE=DATE:' +
-        appleDateCompact(event.date)
-      );
-
-
-      const end =
-        new Date(
-          event.date + 'T12:00:00'
-        );
-
-      end.setDate(
-        end.getDate() + 1
-      );
-
-
-      lines.push(
-        'DTEND;VALUE=DATE:' +
-        appleDateCompact(
-          localISODate(end)
-        )
-      );
-
-    }
-
-
-    /* ---------- TITEL ---------- */
-
-    lines.push(
-      'SUMMARY:' +
-      appleIcsEscape(
-        event.title || 'Lernraum'
-      )
-    );
-
-
-    /* ---------- ORT ---------- */
-
-    if(event.location){
-
-      lines.push(
-        'LOCATION:' +
-        appleIcsEscape(
-          event.location
-        )
-      );
-
-    }
-
-
-    /* ---------- BESCHREIBUNG ---------- */
-
-    if(event.description){
-
-      lines.push(
-        'DESCRIPTION:' +
-        appleIcsEscape(
-          event.description
-        )
-      );
-
-    }
-
-
-    /* ---------- KATEGORIE ---------- */
-
-    if(event.type){
-
-      lines.push(
-        'CATEGORIES:' +
-        appleIcsEscape(
-          typeof EVENT_TYPE_LABELS !== 'undefined'
-            ? (
-                EVENT_TYPE_LABELS[event.type] ||
-                event.type
-              )
-            : event.type
-        )
-      );
-
-    }
-
-
-    lines.push('END:VEVENT');
-
-  });
-
-
-  lines.push('END:VCALENDAR');
-
-
-  return lines.join('\r\n');
-}
-
-
-/* ---------- KALENDER ZU SUPABASE HOCHLADEN ---------- */
-
-async function publishAppleCalendar(){
-
-  try{
-
-    const {
-      data: userData,
-      error: userError
-    } =
-      await supabaseClient.auth.getUser();
-
-
-    if(userError){
-      throw userError;
-    }
-
-
-    const user =
-      userData?.user;
-
-
-    if(!user){
-
-      throw new Error(
-        'Bitte zuerst bei Lernraum anmelden.'
-      );
-
-    }
-
-
-    const token =
-      getAppleCalendarToken();
-
-
-    /*
-      Pfad:
-      USER-ID / zufälliger-token.ics
-
-      Unsere Storage-Policies erlauben
-      jedem Nutzer nur seinen eigenen Ordner.
-    */
-
-    const path =
-      `${user.id}/${token}.ics`;
-
-
-    const ics =
-      buildAppleCalendarIcs();
-
-
-    const blob =
-      new Blob(
-        [ics],
-        {
-          type:
-            'text/calendar;charset=utf-8'
-        }
-      );
-
-
-    const {
-      error: uploadError
-    } =
-      await supabaseClient
-        .storage
-        .from(APPLE_CAL_BUCKET)
-        .upload(
-          path,
-          blob,
-          {
-            upsert: true,
-            contentType:
-              'text/calendar;charset=utf-8',
-            cacheControl: '60'
-          }
-        );
-
-
-    if(uploadError){
-      throw uploadError;
-    }
-
-
-    const {
-      data: publicData
-    } =
-      supabaseClient
-        .storage
-        .from(APPLE_CAL_BUCKET)
-        .getPublicUrl(path);
-
-
-    const publicUrl =
-      publicData?.publicUrl;
-
-
-    if(!publicUrl){
-
-      throw new Error(
-        'Kalender-Link konnte nicht erstellt werden.'
-      );
-
-    }
-
-
-    localStorage.setItem(
-      'lernraum_apple_calendar_feed',
-      publicUrl
-    );
-
-
-    return publicUrl;
-
-  }
-
-  catch(error){
-
-    console.error(
-      'Apple Kalender Sync Fehler:',
-      error
-    );
-
-    throw error;
-
-  }
-
-}
-
-
-/* ============================================================
-   BUTTON:
-    Mit Apple Kalender synchronisieren
-============================================================ */
-
-async function syncAppleCalendar(){
-
-  const button =
-    document.querySelector(
-      '[onclick="syncAppleCalendar()"]'
-    );
-
-
-  const oldText =
-    button?.textContent;
-
-
-  try{
-
-    if(button){
-
-      button.disabled = true;
-
-      button.textContent =
-        'Wird vorbereitet …';
-
-    }
-
-
-    const publicUrl =
-      await publishAppleCalendar();
-
-
-    /*
-      https:// wird zu webcal://
-      → Apple Kalender erkennt es als Abo.
-    */
-
-    const webcalUrl =
-      publicUrl.replace(
-        /^https:\/\//i,
-        'webcal://'
-      );
-
-
-    if(button){
-
-      button.textContent =
-        ' Apple Kalender öffnen';
-
-    }
-
-
-    window.location.href =
-      webcalUrl;
-
-  }
-
-  catch(error){
-
-    alert(
-      error?.message ||
-      'Apple Kalender konnte nicht verbunden werden.'
-    );
-
-
-    if(button){
-
-      button.textContent =
-        oldText ||
-        ' Mit Apple Kalender synchronisieren';
-
-    }
-
-  }
-
-  finally{
-
-    if(button){
-
-      button.disabled = false;
-
-    }
-
-  }
-
-}
-
-
-/* ============================================================
-   KALENDER AUTOMATISCH AKTUALISIEREN
-============================================================ */
-
-let appleCalendarUpdateTimer = null;
-
-
-function scheduleAppleCalendarUpdate(){
-
-  /*
-    Nur automatisch hochladen,
-    wenn Apple Kalender bereits einmal
-    eingerichtet wurde.
-  */
-
-  if(
-    !localStorage.getItem(
-      'lernraum_apple_calendar_feed'
-    )
-  ){
-    return;
-  }
-
-
-  clearTimeout(
-    appleCalendarUpdateTimer
-  );
-
-
-  appleCalendarUpdateTimer =
-    setTimeout(
-      async () => {
-
-        try{
-
-          await publishAppleCalendar();
-
-          console.log(
-            'Apple Kalender aktualisiert.'
-          );
-
-        }
-
-        catch(error){
-
-          console.warn(
-            'Apple Kalender konnte nicht automatisch aktualisiert werden.',
-            error
-          );
-
-        }
-
-      },
-      1200
-    );
-
-}
-
-
-/* ---------- TERMIN HINZUFÜGEN ---------- */
-
-if(
-  typeof window.addEvent === 'function'
-){
-
-  const originalAddEvent =
-    window.addEvent;
-
-
-  window.addEvent =
-    async function(...args){
-
-      const result =
-        await originalAddEvent.apply(
-          this,
-          args
-        );
-
-      scheduleAppleCalendarUpdate();
-
-      return result;
-
-    };
-
-}
-
-
-/* ---------- TERMIN LÖSCHEN ---------- */
-
-if(
-  typeof window.deleteEvent === 'function'
-){
-
-  const originalDeleteEvent =
-    window.deleteEvent;
-
-
-  window.deleteEvent =
-    async function(...args){
-
-      const result =
-        await originalDeleteEvent.apply(
-          this,
-          args
-        );
-
-      scheduleAppleCalendarUpdate();
-
-      return result;
-
-    };
-
-}
-
-
-/* ---------- SERIE LÖSCHEN ---------- */
-
-if(
-  typeof window.deleteEventSeries === 'function'
-){
-
-  const originalDeleteEventSeries =
-    window.deleteEventSeries;
-
-
-  window.deleteEventSeries =
-    async function(...args){
-
-      const result =
-        await originalDeleteEventSeries.apply(
-          this,
-          args
-        );
-
-      scheduleAppleCalendarUpdate();
-
-      return result;
-
-    };
-
-}
-
-
-/* ---------- TERMIN BEARBEITEN ---------- */
-
-if(
-  typeof window.saveEventEdit === 'function'
-){
-
-  const originalSaveEventEdit =
-    window.saveEventEdit;
-
-
-  window.saveEventEdit =
-    async function(...args){
-
-      const result =
-        await originalSaveEventEdit.apply(
-          this,
-          args
-        );
-
-      scheduleAppleCalendarUpdate();
-
-      return result;
-
-    };
-
-}
-
-/* ============================================================
-   APPLE SYNC – FIX FÜR NEUEN KALENDER
-============================================================ */
-
-if (typeof window.lrCalendarAddEvent === 'function') {
-
-  const originalLrCalendarAddEvent =
-    window.lrCalendarAddEvent;
-
-  window.lrCalendarAddEvent =
-    async function (...args) {
-
-      const result =
-        await originalLrCalendarAddEvent.apply(
-          this,
-          args
-        );
-
-      setTimeout(() => {
-        scheduleAppleCalendarUpdate();
-      }, 500);
-
-      return result;
-    };
-}
