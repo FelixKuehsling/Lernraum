@@ -1700,6 +1700,7 @@ async function idbDeleteFile(id){
   );
 }
 async function migrateLegacyDocs(){
+  let changed= false;
   for(const d of state.docs){
     if(d.storage==='idb') continue;
     try{
@@ -1708,6 +1709,7 @@ async function migrateLegacyDocs(){
         const blob= await (await fetch(old.value)).blob();
         await idbPutFile(d.id, blob);
         d.storage= 'idb';
+        changed= true;
         await window.storage.delete('doc:'+d.id, false);
       }
     }
@@ -1715,7 +1717,7 @@ async function migrateLegacyDocs(){
       console.warn('Migration \u00FCbersprungen', d.name, e);
     }
   }
-  await save('lernraum_docs_index', state.docs);
+  if(changed) await save('lernraum_docs_index', state.docs);
 }
 async function handleDocUpload(evt){
   const files= [...evt.target.files];

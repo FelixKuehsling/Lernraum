@@ -25,6 +25,47 @@ let lernraumSyncIsApplying = false;
 let lernraumLastSyncAt = null;
 let lernraumCloudReady = false;
 
+/* Merkt sich lokal, ob es Änderungen gibt, die noch nicht in der
+   Cloud sind (z. B. offline gemacht oder Tab zu schnell geschlossen).
+   Verhindert, dass solche Änderungen beim nächsten Start von
+   älteren Cloud-Daten überschrieben werden. */
+const LR_DIRTY_KEY = 'lernraum_sync_pending';
+const LR_LAST_SYNC_KEY = 'lernraum_sync_last';
+
+function lrReadJson(key) {
+  try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { return null; }
+}
+
+const LR_PAGE_START = Date.now();
+
+function markLocalDirty() {
+  if (!lernraumSyncUser) return;
+  /* Automatische Speicherungen direkt beim Start zählen nicht */
+  if (!lernraumCloudReady && Date.now() - LR_PAGE_START < 4000) return;
+  try { localStorage.setItem(LR_DIRTY_KEY, JSON.stringify({ uid: lernraumSyncUser.id, at: Date.now() })); } catch (e) {}
+}
+
+function localDirtyAt() {
+  const d = lrReadJson(LR_DIRTY_KEY);
+  return (d && lernraumSyncUser && d.uid === lernraumSyncUser.id) ? Number(d.at) || 0 : 0;
+}
+
+function clearLocalDirty(onlyIfNotAfter) {
+  const at = localDirtyAt();
+  if (onlyIfNotAfter && at > onlyIfNotAfter) return;
+  try { localStorage.removeItem(LR_DIRTY_KEY); } catch (e) {}
+}
+
+function rememberLastSync(time) {
+  if (!lernraumSyncUser || !time) return;
+  try { localStorage.setItem(LR_LAST_SYNC_KEY, JSON.stringify({ uid: lernraumSyncUser.id, at: time })); } catch (e) {}
+}
+
+function lastKnownSyncTime() {
+  const d = lrReadJson(LR_LAST_SYNC_KEY);
+  return (d && lernraumSyncUser && d.uid === lernraumSyncUser.id) ? new Date(d.at).getTime() || 0 : 0;
+}
+
 /* =========================================================
    SYNC BUTTON
 ========================================================= */
@@ -676,6 +717,8 @@ async function saveNewPasswordLernraum() {
 async function logoutLernraum() {
   await supabaseClient.auth.signOut();
 
+  try { localStorage.removeItem(LR_DIRTY_KEY); } catch (e) {}
+
   lernraumSyncUser = null;
   lernraumLastSyncAt = null;
   lernraumCloudReady = false;
@@ -770,6 +813,8 @@ async function uploadLernraumData() {
     return false;
   }
 
+  const dirtyBefore = Date.now();
+
   const snapshot =
     createLernraumSnapshot();
 
@@ -806,6 +851,9 @@ async function uploadLernraumData() {
 
   lernraumLastSyncAt =
     syncTime;
+
+  rememberLastSync(syncTime);
+  clearLocalDirty(dirtyBefore);
 
   updateSyncButton();
 
@@ -853,6 +901,9 @@ async function downloadLernraumData() {
 
   lernraumLastSyncAt =
     data.updated_at || null;
+
+  rememberLastSync(data.updated_at);
+  clearLocalDirty();
 
   updateLastSyncStatus();
 
@@ -1117,17 +1168,27 @@ async function initializeCloudAfterLogin() {
   }
 
 
-  if (data?.data) {
+  const pendingAt = localDirtyAt();
+  const cloudTime = data?.updated_at ? new Date(data.updated_at).getTime() : 0;
+
+  if (!data?.data) {
+    await uploadLernraumData();
+  } else if (pendingAt && (cloudTime <= lastKnownSyncTime() || pendingAt > cloudTime)) {
+    /* Hier gibt es neuere, noch nicht hochgeladene Änderungen
+       → lokale Daten behalten und hochladen */
+    await uploadLernraumData();
+  } else {
     lernraumLastSyncAt =
       data.updated_at || null;
+
+    rememberLastSync(data.updated_at);
+    clearLocalDirty();
 
     updateLastSyncStatus();
 
     await applyLernraumSnapshot(
       data.data
     );
-  } else {
-    await uploadLernraumData();
   }
 
   lernraumCloudReady = true;
@@ -1180,6 +1241,9 @@ function installCloudSyncHook() {
     /* Statistik wird während der Lernuhr alle paar Sekunden
        gespeichert – dafür nicht jedes Mal hochladen. */
     if (key !== 'lernraum_stats') {
+      if (lernraumSyncUser && !lernraumSyncIsApplying) {
+        markLocalDirty();
+      }
       scheduleCloudSync();
     }
 
@@ -1200,6 +1264,12 @@ async function refreshFromCloudIfNewer() {
   /* Start-Abgleich war fehlgeschlagen (z. B. offline) → erneut versuchen */
   if (!lernraumCloudReady) {
     await initializeCloudAfterLogin();
+    return;
+  }
+
+  /* Upload war fehlgeschlagen (z. B. offline) → nachholen */
+  if (localDirtyAt()) {
+    await uploadLernraumData();
     return;
   }
 
@@ -1225,6 +1295,10 @@ document.addEventListener('visibilitychange', () => {
   if (!document.hidden) {
     refreshFromCloudIfNewer();
   }
+});
+
+window.addEventListener('online', () => {
+  setTimeout(refreshFromCloudIfNewer, 1000);
 });
 
 
