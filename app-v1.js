@@ -5060,13 +5060,31 @@ window.addEventListener('pagehide', () => {
 function renderStudySetup(){
   const wrap=document.getElementById('study-content');
   if(!wrap) return;
-  const folders=state.cardFolders;
-  wrap.innerHTML=`<div class="card" style="max-width:520px;margin:20px auto;text-align:left"><div class="eyebrow">Übungsmodus</div><h3 style="font-family:'Fraunces',serif;margin:6px 0 14px">Was möchtest du üben?</h3><label style="display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;color:var(--ink-soft)">Kartengruppe<select id="study-start-group"><option value="alle">Alle Karteikarten</option>${folders.map(f=>`<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('')}</select></label><div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn" onclick="startStudyFromSelection()">Übung starten</button></div></div>`;
+  const cards=Array.isArray(state.cards)?state.cards:[];
+  const countFor=id=>cards.filter(c=>c.folderId===id).length;
+  const mods=(Array.isArray(modules)?modules:[]).filter(m=>countFor(m.id)>0);
+  const folders=(Array.isArray(state.cardFolders)?state.cardFolders:[]).filter(f=>countFor(f.id)>0);
+  const without=cards.filter(c=>!c.folderId).length;
+  const preselect=(typeof fcModuleFilter!=='undefined'&&fcModuleFilter&&fcModuleFilter!=='alle')?fcModuleFilter:'alle';
+  const opt=(value,label,count)=>`<option value="${escapeHtml(value)}" ${preselect===value?'selected':''}>${escapeHtml(label)} (${count})</option>`;
+  const options=[opt('alle','Alle Karteikarten',cards.length)]
+    .concat(mods.map(m=>opt(m.id,(m.icon?m.icon+' ':'')+(m.name||'Modul'),countFor(m.id))))
+    .concat(folders.map(f=>opt(f.id,f.name||'Ordner',countFor(f.id))))
+    .concat(without&&(mods.length||folders.length)?[opt('ohne','Ohne Modul',without)]:[]);
+  wrap.innerHTML=`<div class="card" style="max-width:520px;margin:20px auto;text-align:left"><div class="eyebrow">Übungsmodus</div><h3 style="font-family:'Fraunces',serif;margin:6px 0 14px">Was möchtest du üben?</h3><label style="display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;color:var(--ink-soft)">Kartengruppe<select id="study-start-group">${options.join('')}</select></label><div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn" onclick="startStudyFromSelection()">Übung starten</button></div></div>`;
 }
-
 function startStudyFromSelection(){
   const selected=document.getElementById('study-start-group')?.value||'alle';
-  const indices=state.cards.map((card,index)=>index).filter(index=>selected==='alle'||state.cards[index].folderId===selected);
+  const indices=state.cards.map((card,index)=>index).filter(index=>{
+    const folderId=state.cards[index].folderId;
+    if(selected==='alle') return true;
+    if(selected==='ohne') return !folderId;
+    return folderId===selected;
+  });
+  if(!indices.length){
+    if(typeof notify==='function') notify('In dieser Gruppe gibt es noch keine Karteikarten.','error');
+    return;
+  }
   startStudySession(indices);
 }
 
@@ -6764,8 +6782,27 @@ function answerGameFixed(chosen) {
     return `${m} Min.`;
   }
 
+  /* Einheitlich mit der Statistik: Lernzeit = Lernuhr-Sitzungen der letzten
+     7 Tage, plus die gerade laufende Lern-Sitzung (live). */
+  function lernuhrWeekSeconds(){
+    let total = 0;
+    try{
+      if(typeof historyLastDays === 'function'){
+        total = historyLastDays(7).reduce((sum, item) => sum + (Number(item.seconds) || 0), 0);
+      }
+      if(
+        typeof lernuhrRunning !== 'undefined' && lernuhrRunning &&
+        typeof lernuhrSimpleMode !== 'undefined' && lernuhrSimpleMode === 'lernen' &&
+        typeof lernuhrSimpleStartedAt !== 'undefined' && lernuhrSimpleStartedAt
+      ){
+        total += Math.max(0, Math.floor((Date.now() - lernuhrSimpleStartedAt) / 1000));
+      }
+    }catch(e){}
+    return Math.floor(total);
+  }
+
   function updateSiteLearningDashboard(){
-    const seconds = siteWeekSeconds();
+    const seconds = lernuhrWeekSeconds();
 
     const label = document.getElementById('dash-week-learning');
     if(label){
