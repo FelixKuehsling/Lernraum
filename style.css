@@ -15,6 +15,7 @@
   --clay-dark: #9A6C39;
   --clay-tint: #F2E4CC;
   --rust: #A65F49;
+  --error: var(--rust);
   --rust-tint: #F2DED7;
   --dusk: #6E85A0;
   --dusk-tint: #E2E7EE;

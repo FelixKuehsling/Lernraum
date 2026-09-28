@@ -27,7 +27,7 @@
 <link href="manifest.json" rel="manifest"/>
 <link href="assets/app-icon-192.png" rel="apple-touch-icon"/>
 <link href="assets/fonts/fonts.css" rel="stylesheet"/>
-<link href="style.css?v=38" rel="stylesheet"/>
+<link href="style.css?v=39" rel="stylesheet"/>
 <style id="dashboard-v3-overrides">
 /* Dashboard V3 - nur fuer die neue Startseite */
 #view-dashboard .dash-new-stats{
@@ -655,6 +655,27 @@
 <button class="btn ghost" onclick="initiateSyncLogout()" style="width:100%; font-size:12px; color:var(--error);">Abmelden</button>
 </div>
 </div>
+
+<!-- BACKUP -->
+<div class="card" style="margin-top:12px;">
+<h3 style="margin:0 0 4px 0; font-size:15px; font-weight:600;">Backup</h3>
+<p style="margin:0 0 14px 0; font-size:12px; color:var(--text-secondary);">Alle Daten inkl. Unterlagen als Datei sichern oder ein Backup wieder laden</p>
+<div style="display:flex; gap:8px; flex-wrap:wrap;">
+<button class="btn" id="lr-export-btn" onclick="exportLernraumData()" style="flex:1; min-width:150px; font-size:12px;">↓ Backup herunterladen</button>
+<button class="btn ghost" onclick="importLernraumData()" style="flex:1; min-width:150px; font-size:12px;">↑ Backup laden</button>
+</div>
+</div>
+
+<!-- KONTO LÖSCHEN -->
+<div class="card" style="margin-top:12px;">
+<div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+<div style="flex:1; min-width:180px;">
+<h3 style="margin:0 0 4px 0; font-size:15px; font-weight:600;">Konto löschen</h3>
+<p id="lr-delete-hint" style="margin:0; font-size:12px; color:var(--text-secondary);">Löscht dein Konto und alle Daten in der Cloud.</p>
+</div>
+<button class="btn ghost" onclick="openDeleteAccountDialog()" style="font-size:12px; color:var(--error); border-color:var(--error); white-space:nowrap;">Konto löschen</button>
+</div>
+</div>
    <p style="margin-top:20px; text-align:center; font-size:11px; opacity:.6;">
      <a href="#" onclick="openFeedbackDialog(); return false;" style="color:inherit;">Feedback &amp; Ideen</a> ·
 <a href="rechtliches.html" style="color:inherit;">Impressum &amp; Datenschutz</a>
@@ -962,6 +983,7 @@
 <script src="settings-panel.js?v=303"></script>
 <script src="feedback.js?v=1"></script>
 <script src="onboarding.js?v=1" defer></script>
+<script src="account-tools.js?v=1" defer></script>
 <script id="dashboard-v3-script">
 (function(){
   'use strict';
