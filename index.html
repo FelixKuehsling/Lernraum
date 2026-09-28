@@ -27,7 +27,7 @@
 <link href="manifest.json" rel="manifest"/>
 <link href="assets/app-icon-192.png" rel="apple-touch-icon"/>
 <link href="assets/fonts/fonts.css" rel="stylesheet"/>
-<link href="style.css?v=37" rel="stylesheet"/>
+<link href="style.css?v=38" rel="stylesheet"/>
 <style id="dashboard-v3-overrides">
 /* Dashboard V3 - nur fuer die neue Startseite */
 #view-dashboard .dash-new-stats{
@@ -411,6 +411,7 @@
     <div class="dash-deadline-content">
       <div class="dash-card-title">N&auml;chste Deadline</div>
       <div class="dash-deadline-title" id="dash-deadline-title">Keine Deadline geplant</div>
+      <div class="dash-deadline-meta" id="dash-deadline-meta"></div>
     </div>
     <button class="dash-deadline-open" onclick="goToView('todo')">&Ouml;ffnen &rarr;</button>
   </div>
@@ -423,7 +424,6 @@
     <span id="dash-todos-today"></span>
     <span id="dash-next-detail"></span>
     <span id="dash-task-today-count"></span>
-    <span id="dash-deadline-meta"></span>
   </div>
     <span id="dash-progress-time"></span>
     <span id="dash-progress-message"></span>
@@ -943,8 +943,8 @@
        SCRIPTS
 ========================================================= -->
 <script src="vendor/supabase-2.117.2.js"></script>
-<script src="app-v1.js?v=10&t=1789375518" defer></script>
-<script src="calendar-redesign-v3.js?v=1001&t=1789375708" defer></script>
+<script src="app-v1.js?v=12" defer></script>
+<script src="calendar-redesign-v3.js?v=1003" defer></script>
 <script src="sync.js?v=303&t=1789375014"></script>
 <script src="settings-panel.js?v=302&t=1789313121"></script>
 <script src="feedback.js?v=1"></script>
@@ -1052,24 +1052,37 @@
     renderDeadline();
     setTimeout(addCalendarDots,20);
   }
-  if(typeof renderDashboard==='function'){
-    const original=renderDashboard;
-    window.renderDashboard=function(){
-      const result=original.apply(this,arguments);
-      setTimeout(refresh,0);
-      return result;
-    };
+  /* Erst nach dem Laden von app-v1.js (defer) einhängen – vorher gibt es
+     renderDashboard noch nicht und die Aufgaben sind noch nicht geladen. */
+  let hooked=false;
+  function installHooks(){
+    if(hooked) return;
+    if(typeof window.renderDashboard==='function'){
+      hooked=true;
+      const original=window.renderDashboard;
+      window.renderDashboard=function(){
+        const result=original.apply(this,arguments);
+        setTimeout(refresh,0);
+        return result;
+      };
+    }
+    if(typeof window.dashCalShift==='function'){
+      const originalShift=window.dashCalShift;
+      window.dashCalShift=function(){
+        const result=originalShift.apply(this,arguments);
+        setTimeout(addCalendarDots,30);
+        return result;
+      };
+    }
   }
-  if(typeof dashCalShift==='function'){
-    const originalShift=dashCalShift;
-    window.dashCalShift=function(){
-      const result=originalShift.apply(this,arguments);
-      setTimeout(addCalendarDots,30);
-      return result;
-    };
+  function start(){
+    installHooks();
+    refresh();
+    setTimeout(refresh,800);
+    setTimeout(refresh,2500);
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',refresh);
-  else refresh();
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start);
+  else start();
 })();
 </script>
 <script>

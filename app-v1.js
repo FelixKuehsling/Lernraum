@@ -278,10 +278,7 @@ function localISODate(date = new Date()){
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
-  return `${year}
--${month}
--${day}
-`;
+  return `${year}-${month}-${day}`;
 }
 function todayISO(){
   return localISODate(new Date());
@@ -1199,9 +1196,7 @@ function getEventTime(){
   const hour = document.getElementById('event-time-hour')?.value || '';
   const minute = document.getElementById('event-time-minute')?.value || '';
   if(!hour && !minute) return '';
-  return `${hour || '00'}
-:${minute || '00'}
-`;
+  return `${hour || '00'}:${minute || '00'}`;
 }
 function setEventTime(value = ''){
   const hourSelect = document.getElementById('event-time-hour');
@@ -1534,7 +1529,7 @@ function renderFcManage(){
           data-card-id="${escapeHtml(card.id)}"
           aria-label="Modul"
         >
-          <option value="" ${!card.folderId ? 'selected' : ''}>Alle Module</option>
+          <option value="" ${!card.folderId ? 'selected' : ''}>Kein Modul</option>
           ${(Array.isArray(modules) ? modules : []).map(mod => `
             <option
               value="${escapeHtml(mod.id)}"
@@ -1578,7 +1573,7 @@ async function saveNewCard(){
     id: uid(),
     front,
     back,
-    folderId: folderSelect?.value || null,
+    folderId: folderSelect?.value || (typeof fcModuleFilter !== 'undefined' && fcModuleFilter ? fcModuleFilter : null),
     box: 1,
     dueDate: Date.now(),
     createdAt: Date.now()
@@ -2506,7 +2501,7 @@ function renderNotesList(){
   const notes=getFilteredNotes(q).sort((a,b)=>(b.favorite?1:0)-(a.favorite?1:0)||(b.updated||0)-(a.updated||0));
   wrap.innerHTML=notes.length?notes.map(note=>`<button type="button" class="note-item ${note.id===selectedNoteId?'active':''}" data-note-id="${note.id}" style="width:100%;text-align:left;font-family:inherit;color:inherit"><h4>${note.favorite?'★ ':''}${escapeHtml(note.title||'Ohne Titel')}</h4><p>${escapeHtml(note.content||'Kein Inhalt').slice(0,70)}</p></button>`).join(''):`<div class="empty"><span class="emoji">${showTrash?'🗑':'🗒'}</span>${showTrash?'Papierkorb ist leer.':'Noch keine Notizen.'}</div>`;
   wrap.querySelectorAll('[data-note-id]').forEach(btn=>btn.addEventListener('click',()=>{selectedNoteId=btn.dataset.noteId;renderNotesList();}));
-  renderNoteEditor();
+  renderNoteEditor();  if(typeof updateNotesTrashButton==='function') updateNotesTrashButton();
 }
 function renderNoteEditor(){
   const wrap=document.getElementById('note-editor-wrap');
@@ -2520,13 +2515,13 @@ function renderNoteEditor(){
     wrap.innerHTML=`<div class="note-toolbar"><span class="note-meta">Gelöschte Notiz</span></div><input class="note-title-input" value="${escapeHtml(note.title||'')}" disabled><textarea disabled style="width:100%;min-height:390px;resize:none;line-height:1.6">${escapeHtml(note.content||'')}</textarea><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn ghost" onclick="restoreNote('${note.id}')">Wiederherstellen</button><button class="btn danger" onclick="permanentlyDeleteNote('${note.id}')">Endgültig löschen</button></div>`;
     return;
   }
-  wrap.innerHTML=`<div class="note-toolbar"><span class="note-meta">${note.updated?'Zuletzt gespeichert: '+new Date(note.updated).toLocaleString('de-DE'):'Neue Notiz'}</span><button type="button" id="note-favorite-btn" class="icon-btn favorite-btn ${note.favorite?'active':''}" title="Favorit">${note.favorite?'★':'☆'}</button><select id="note-folder-select" class="note-folder-select"><option value="">Alle Module</option>${(Array.isArray(modules)?modules:[]).map(m=>`<option value="${m.id}" ${note.folderId===m.id?'selected':''}>${escapeHtml(m.name||m.title||'Ohne Namen')}</option>`).join('')}</select><button type="button" class="btn danger small" id="note-delete-btn">Löschen</button></div><input type="text" class="note-title-input" id="note-title" value="${escapeHtml(note.title||'')}" placeholder="Titel"><textarea id="note-content" placeholder="Schreib deine Notizen …" style="width:100%;min-height:390px;resize:vertical;line-height:1.6"></textarea><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button type="button" class="btn ghost" id="note-cancel-btn">Abbrechen</button><button type="button" class="btn" id="note-save-btn">Speichern</button></div>`;
+  wrap.innerHTML=`<div class="note-toolbar"><span class="note-meta">${note.updated?'Zuletzt gespeichert: '+new Date(note.updated).toLocaleString('de-DE'):'Neue Notiz'}</span><button type="button" id="note-favorite-btn" class="icon-btn favorite-btn ${note.favorite?'active':''}" title="Favorit">${note.favorite?'★':'☆'}</button><select id="note-folder-select" class="note-folder-select"><option value="">Kein Modul</option>${(Array.isArray(modules)?modules:[]).map(m=>`<option value="${m.id}" ${note.folderId===m.id?'selected':''}>${escapeHtml(m.name||m.title||'Ohne Namen')}</option>`).join('')}</select><button type="button" class="btn danger small" id="note-delete-btn">Löschen</button></div><input type="text" class="note-title-input" id="note-title" value="${escapeHtml(note.title||'')}" placeholder="Titel"><textarea id="note-content" placeholder="Schreib deine Notizen …" style="width:100%;min-height:390px;resize:vertical;line-height:1.6"></textarea><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button type="button" class="btn ghost" id="note-cancel-btn">Abbrechen</button><button type="button" class="btn" id="note-save-btn">Speichern</button></div>`;
   document.getElementById('note-content').value=note.content||'';
   const capture=()=>{note.title=document.getElementById('note-title')?.value.trim()||'';note.content=document.getElementById('note-content')?.value||'';note.folderId=document.getElementById('note-folder-select')?.value||null;};
   document.getElementById('note-favorite-btn')?.addEventListener('click',async()=>{capture();note.favorite=!note.favorite;note.updated=Date.now();await save('lernraum_notes',state.notes);renderNotesList();});
   document.getElementById('note-delete-btn')?.addEventListener('click',()=>deleteNote(note.id));
-  document.getElementById('note-cancel-btn')?.addEventListener('click',()=>{selectedNoteId=null;renderNotesList();});
-  document.getElementById('note-save-btn')?.addEventListener('click',async()=>{capture();if(!note.title&&!note.content.trim()){document.getElementById('note-title')?.focus();return;}note.updated=Date.now();await save('lernraum_notes',state.notes);selectedNoteId=null;renderNotesList();renderDashboard();if(typeof notify==='function')notify('Notiz gespeichert.');});
+  document.getElementById('note-cancel-btn')?.addEventListener('click',async()=>{const isEmpty=!(note.title||'').trim()&&!(note.content||'').trim();if(isEmpty&&!note.savedOnce){state.notes=state.notes.filter(n=>n.id!==note.id);await save('lernraum_notes',state.notes);}selectedNoteId=null;renderNotesList();});
+  document.getElementById('note-save-btn')?.addEventListener('click',async()=>{capture();if(!note.title&&!note.content.trim()){document.getElementById('note-title')?.focus();return;}note.savedOnce=true;note.updated=Date.now();await save('lernraum_notes',state.notes);selectedNoteId=null;renderNotesList();renderDashboard();if(typeof notify==='function')notify('Notiz gespeichert.');});
 }
 async function toggleNoteFavorite(id){
   const note=state.notes.find(item=>item.id===id);if(!note)return;note.favorite=!note.favorite;note.updated=Date.now();await save('lernraum_notes',state.notes);renderNotesList();
@@ -2692,12 +2687,33 @@ async function saveEventEdit(){
   renderDashboard();
   notify('Termin aktualisiert.');
 }
+/* Reparatur: Frühere Versionen haben Datumswerte mit Zeilenumbrüchen
+   gespeichert (z. B. "2026\n-09\n-28\n"). Das bereinigt sie einmalig. */
+function cleanDateString(value){
+  if(typeof value !== 'string' || !/\s/.test(value)) return value;
+  const compact = value.replace(/\s+/g, '');
+  return /^\d{4}-\d{2}-\d{2}$/.test(compact) || /^\d{2}:\d{2}$/.test(compact) ? compact : value;
+}
+async function repairBrokenDateStrings(){
+  const fix = (list, fields) => {
+    let changed = false;
+    (Array.isArray(list) ? list : []).forEach(item => {
+      if(!item || typeof item !== 'object') return;
+      fields.forEach(f => {
+        const cleaned = cleanDateString(item[f]);
+        if(cleaned !== item[f]){ item[f] = cleaned; changed = true; }
+      });
+    });
+    return changed;
+  };
+  if(fix(learningHistory, ['date'])) await save('lernraum_learning_history', learningHistory);
+  if(fix(state.events, ['date', 'time', 'endTime'])) await save('lernraum_events', state.events);
+  if(fix(state.todos, ['deadline', 'date'])) await save('lernraum_todos', state.todos);
+  if(fix(studyPlans, ['date', 'targetDate'])) await save('lernraum_study_plans', studyPlans);
+}
 function localDateKey(ts= Date.now()){
   const d= new Date(ts);
-  return `${d.getFullYear()}
--${String(d.getMonth()+1).padStart(2, '0')}
--${String(d.getDate()).padStart(2, '0')}
-`;
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 async function logLearningSession(seconds, subject= 'Allgemein', kind= 'focus'){
   if(seconds<10)return;
@@ -2771,10 +2787,7 @@ function historyLastDays(n){
 }
 function fmtDuration(sec){
   const h= Math.floor(sec/ 3600), m= Math.floor((sec% 3600)/ 60);
-  return h? `${h}
-h ${m}
-m`: `${m}
- Min.`;
+  return h? `${h} h ${m} min`: `${m} Min.`;
 }
 function renderWeekChart(id, n= 7){
   const el= document.getElementById(id);
@@ -3100,6 +3113,7 @@ activateView= function(view){
   await init();
   learningHistory= await safeGet('lernraum_learning_history', []);
   studyPlans= await safeGet('lernraum_study_plans', []);
+  await repairBrokenDateStrings();
   normalizeManualStudyPlans();
   state.notes.forEach(n=> {
     if(n.favorite===undefined)n.favorite= false;
@@ -4781,7 +4795,20 @@ function openModuleArea(moduleId, view){
     return;
   }
 
-  activateView(view);
+  /* Jeden Bereich direkt auf das Modul gefiltert öffnen */
+  const openers = {
+    notes: openModuleNotes,
+    cards: openModuleKarteikarten,
+    docs: openModuleDocuments,
+    calendar: openModuleCalendar,
+    learningplan: openModuleLernplan,
+    planner: openModuleLernplan
+  };
+  if(openers[view]){
+    openers[view](moduleId);
+    return;
+  }
+  if(document.getElementById('view-' + view)) activateView(view);
 }
 
 (function installModuleCenterStyles(){
@@ -5071,8 +5098,13 @@ function installNotesTrashButton(){
   if(!create) return;
   const button=document.createElement('button');
   button.type='button';button.id='lr-notes-trash-button';button.className='btn ghost';button.textContent='🗑 Papierkorb';
-  button.onclick=()=>{showTrash=true;selectedNoteId=null;renderNotesList();};
+  button.onclick=()=>{showTrash=!showTrash;selectedNoteId=null;renderNotesList();updateNotesTrashButton();};
   create.parentNode.insertBefore(button,create);
+  updateNotesTrashButton();
+}
+function updateNotesTrashButton(){
+  const button=document.getElementById('lr-notes-trash-button');
+  if(button) button.textContent = showTrash ? '← Zurück zu Notizen' : '🗑 Papierkorb';
 }
 
 function installDocsFinalLayout(){

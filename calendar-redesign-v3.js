@@ -1392,6 +1392,14 @@
     #view-calendar .lr-cal-event:hover .lr-cal-delete{
       opacity:.8 !important;
     }
+    /* Touch-Geräte (Handy/Tablet): kein Hover möglich – unsichtbares Kreuz
+       würde beim Antippen versehentlich löschen. Gelöscht wird dort im Tages-Fenster. */
+    @media (hover: none), (pointer: coarse){
+      #view-calendar #cal-grid .lr-cal-delete{
+        display:none !important;
+        pointer-events:none !important;
+      }
+    }
     @media(max-width:1100px){
       #view-calendar .lr-cal-layout{
         grid-template-columns:1fr !important;
@@ -2269,32 +2277,46 @@
     }
   });
   window.showDayPopup = function(iso){
+    document.getElementById('day-popup-modal')?.remove();
     const events = getEvents().filter(e => String(e.date) === iso).sort((a,b) => (a.time || '').localeCompare(b.time || ''));
     const date = parseLocalDate(iso);
     const title = date.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+    const color = (id, a) => (id && typeof window.getModuleColor === 'function') ? window.getModuleColor(id, a) : null;
 
     const modal = document.createElement('div');
     modal.id = 'day-popup-modal';
-    modal.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:10000;';
+    modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:10000; padding:16px;';
     modal.innerHTML = `
-      <div style="background:#fff; border-radius:16px; padding:24px; max-width:450px; width:90%; max-height:80vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,0.15);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-          <h2 style="margin:0; font-size:18px; font-weight:600;">${title}</h2>
-          <button onclick="document.getElementById('day-popup-modal').remove()" style="border:none; background:none; font-size:24px; cursor:pointer; padding:0; color:#999;">✕</button>
+      <div style="background:var(--surface,#fff); color:var(--ink,#222); border:1px solid var(--line,#eee); border-radius:16px; padding:22px; max-width:450px; width:100%; max-height:80vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,0.25);">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px;">
+          <h2 style="margin:0; font-size:18px; font-weight:600; color:var(--ink,#222);">${safeText(title)}</h2>
+          <button type="button" data-popup-close aria-label="Schließen" style="border:none; background:none; font-size:22px; cursor:pointer; padding:4px; color:var(--ink-soft,#999);">✕</button>
         </div>
-        <div style="border-top:1px solid #eee; padding-top:16px;">
+        <div style="border-top:1px solid var(--line,#eee); padding-top:14px;">
           ${events.length ? events.map(e => `
-            <div style="padding:14px; margin-bottom:10px; background:${e.moduleId && typeof window.getModuleColor === 'function' ? window.getModuleColor(e.moduleId, 0.15) : '#f5f5f5'}; border-left:4px solid ${e.moduleId && typeof window.getModuleColor === 'function' ? window.getModuleColor(e.moduleId, 1) : '#ccc'}; border-radius:8px;">
-              <div style="font-weight:600; color:#333;">${e.time ? e.time : 'Ganztägig'}</div>
-              <div style="margin-top:4px; color:#555; font-size:14px;">${e.title || 'Termin ohne Titel'}</div>
-              ${e.description ? `<div style="margin-top:6px; color:#777; font-size:13px;">${e.description}</div>` : ''}
+            <div style="display:flex; align-items:flex-start; gap:10px; padding:12px 12px 12px 14px; margin-bottom:10px; background:${color(e.moduleId,0.15) || 'var(--bg-soft,#f5f5f5)'}; border-left:4px solid ${color(e.moduleId,1) || 'var(--line,#ccc)'}; border-radius:8px;">
+              <div style="flex:1; min-width:0;">
+                <div style="font-weight:600;">${safeText(e.time ? e.time : 'Ganztägig')}</div>
+                <div style="margin-top:4px; font-size:14px; opacity:.85; overflow-wrap:anywhere;">${safeText(e.title || 'Termin ohne Titel')}</div>
+                ${e.description ? `<div style="margin-top:6px; font-size:13px; opacity:.7;">${safeText(e.description)}</div>` : ''}
+              </div>
+              <button type="button" data-popup-delete="${safeText(String(e.id))}" title="Termin löschen" aria-label="Termin löschen" style="flex-shrink:0; border:1px solid var(--line,#ddd); background:transparent; color:var(--ink-soft,#777); border-radius:8px; width:32px; height:32px; font-size:16px; cursor:pointer;">🗑</button>
             </div>
-          `).join('') : '<div style="text-align:center; color:#999; padding:20px;">Keine Termine an diesem Tag</div>'}
+          `).join('') : '<div style="text-align:center; opacity:.6; padding:20px;">Keine Termine an diesem Tag</div>'}
         </div>
       </div>
     `;
     document.body.appendChild(modal);
     modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
+    modal.querySelector('[data-popup-close]')?.addEventListener('click', () => modal.remove());
+    modal.querySelectorAll('[data-popup-delete]').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const before = getEvents().length;
+        await window.lrDeleteCalendarEvent(btn.dataset.popupDelete);
+        if (getEvents().length !== before) window.showDayPopup(iso);
+      });
+    });
   };
   setTimeout(
     startCalendar,

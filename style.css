@@ -1073,7 +1073,10 @@ html.dark .dash-calendar-card .mini-cal-day { background: var(--bg-soft); }
   .main { padding: 28px 28px 50px !important; }
 }
 @media (max-width: 1024px) {
-  .dash-grid, .cal-layout, .notes-layout, .planner-layout { grid-template-columns: 1fr; }
+  .dash-grid, .cal-layout, .notes-layout, .planner-layout { grid-template-columns: minmax(0, 1fr); }
+  .notes-layout > *, .cal-layout > *, .planner-layout > * { min-width: 0; }
+  .note-toolbar { flex-wrap: wrap; }
+  .note-toolbar .note-folder-select { min-width: 0; max-width: 100%; }
 }
 @media (max-width: 1000px) {
   #view-cards .fc-create-form { grid-template-columns: 1fr 1fr !important; }
