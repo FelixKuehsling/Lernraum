@@ -25,7 +25,7 @@ Folge: `sync.js` läuft **vor** `app-v1.js`. Dinge aus app-v1 (z. B. `save`) dor
 | `calendar-redesign-v3.js` | Kalender (Monat/Woche, Tages-Popup), überschreibt Kalender-Funktionen via `window.*` |
 | `calendar-series.js` | Neue Termine inkl. Wiederholung, Bearbeiten (`lrEditCalendarEvent`), Löschen mit Serien-Auswahl |
 | `sync.js` | Supabase-Login/Registrierung/Passwort-Reset, Cloud-Sync (ganzer Snapshot in Tabelle `lernraum_sync`, last-writer-wins, Schutz für nicht hochgeladene Änderungen via `lernraum_sync_pending`) |
-| `docs-sync.js` | Unterlagen-Dateien im Supabase-Storage-Bucket `lernraum-docs` (`<user_id>/<doc_id>`), lädt fehlende Dateien automatisch aus der Cloud |
+| `docs-sync.js` | Unterlagen-Dateien im Supabase-Storage-Bucket `lernraum-docs` (`<user_id>/<doc_id>`), lädt fehlende Dateien automatisch aus der Cloud. Außerdem die Datei-Ansicht in der App (`openDoc`, Zurück-Knopf); PDFs über pdf.js aus `vendor/pdfjs-*/` (erst beim ersten PDF geladen, nötig fürs iPhone) |
 | `account-tools.js` | Backup-Export/-Import (JSON inkl. Dateien), Konto löschen (RPC `delete_my_account`) |
 | `onboarding.js` | Einführungs-Tour für neue Nutzer + Banner „Daten nur im Browser“ |
 | `settings-panel.js` | Status-Anzeige in den Einstellungen |

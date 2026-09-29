@@ -162,6 +162,118 @@
      Früher ging ein neues Fenster auf – in der Handy-App (Startbildschirm)
      kam man daraus nicht mehr zurück. */
   let viewerUrl = null;
+  let pdfViewer = null;
+
+  /* PDF-Anzeige mit pdf.js (liegt in vendor/, wird erst beim ersten PDF geladen).
+     Nötig, weil iPhone/iPad PDFs im iframe nur als erste Seite zeigen. */
+  const PDFJS_DIR = 'vendor/pdfjs-6.3.289/';
+  let pdfjsPromise = null;
+  function loadPdfjs() {
+    if (!pdfjsPromise) {
+      const base = new URL(PDFJS_DIR, document.baseURI).href;
+      pdfjsPromise = import(base + 'pdf.min.js').then(lib => {
+        lib.GlobalWorkerOptions.workerSrc = base + 'pdf.worker.min.js';
+        return { lib, base };
+      });
+      pdfjsPromise.catch(() => { pdfjsPromise = null; });
+    }
+    return pdfjsPromise;
+  }
+
+  function createPdfViewer(body, blob, fallback) {
+    let destroyed = false, doc = null, loadTask = null, observer = null, zoom = 1, pages = [];
+    const scroller = document.createElement('div');
+    scroller.className = 'lr-pdf-scroller';
+    scroller.innerHTML = '<div class="lr-pdf-status">PDF wird geladen …</div>';
+    const tools = document.createElement('div');
+    tools.className = 'lr-pdf-tools';
+    tools.innerHTML = '<button type="button" data-z="-1" aria-label="Verkleinern">−</button>' +
+      '<span class="lr-pdf-info"></span>' +
+      '<button type="button" data-z="1" aria-label="Vergrößern">+</button>';
+    body.classList.add('lr-pdf-body');
+    body.appendChild(scroller);
+    body.appendChild(tools);
+    const info = tools.querySelector('.lr-pdf-info');
+
+    function renderPage(p) {
+      if (p.rendered || destroyed) return;
+      p.rendered = true;
+      doc.getPage(p.num).then(page => {
+        if (destroyed) return;
+        const vp = page.getViewport({ scale: p.cssWidth / page.getViewport({ scale: 1 }).width });
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.floor(vp.width * ratio);
+        canvas.height = Math.floor(vp.height * ratio);
+        canvas.style.width = vp.width + 'px';
+        canvas.style.height = vp.height + 'px';
+        p.el.style.height = vp.height + 'px';
+        p.task = page.render({ canvas, canvasContext: canvas.getContext('2d'), viewport: vp,
+          transform: ratio !== 1 ? [ratio, 0, 0, ratio, 0, 0] : null });
+        return p.task.promise.then(() => { if (!destroyed) { p.el.innerHTML = ''; p.el.appendChild(canvas); } });
+      }).catch(() => { p.rendered = false; });
+    }
+
+    function layout() {
+      if (destroyed || !doc) return;
+      const keep = scroller.scrollHeight ? scroller.scrollTop / scroller.scrollHeight : 0;
+      observer && observer.disconnect();
+      pages.forEach(p => p.task && p.task.cancel && p.task.cancel());
+      scroller.innerHTML = '';
+      const cssWidth = Math.max(200, Math.min(scroller.clientWidth - 24, 900) * zoom);
+      observer = new IntersectionObserver(entries => entries.forEach(e => {
+        if (e.isIntersecting) renderPage(pages[+e.target.dataset.i]);
+      }), { root: scroller, rootMargin: '600px 0px' });
+      pages = [];
+      for (let i = 0; i < doc.numPages; i++) {
+        const el = document.createElement('div');
+        el.className = 'lr-pdf-page';
+        el.dataset.i = i;
+        el.style.width = cssWidth + 'px';
+        el.style.height = Math.round(cssWidth * doc._lrRatio) + 'px';
+        scroller.appendChild(el);
+        pages.push({ num: i + 1, el, cssWidth, rendered: false });
+        observer.observe(el);
+      }
+      scroller.scrollTop = keep * scroller.scrollHeight;
+      info.textContent = doc.numPages + (doc.numPages === 1 ? ' Seite' : ' Seiten') + ' · ' + Math.round(zoom * 100) + ' %';
+    }
+
+    tools.addEventListener('click', e => {
+      const b = e.target.closest('button[data-z]');
+      if (!b) return;
+      zoom = Math.min(3, Math.max(0.5, zoom + (+b.dataset.z) * 0.25));
+      layout();
+    });
+
+    loadPdfjs().then(({ lib, base }) => blob.arrayBuffer().then(data => {
+      if (destroyed) return;
+      const task = loadTask = lib.getDocument({ data, cMapUrl: base + 'cmaps/', cMapPacked: true,
+        standardFontDataUrl: base + 'standard_fonts/', wasmUrl: base + 'wasm/', iccUrl: base + 'iccs/',
+        isEvalSupported: false, enableXfa: false });
+      return task.promise.then(d => {
+        doc = d;
+        if (destroyed) { task.destroy(); return; }
+        return d.getPage(1).then(first => {
+          const v = first.getViewport({ scale: 1 });
+          d._lrRatio = v.height / v.width;
+          layout();
+        });
+      });
+    })).catch(() => { if (!destroyed) { scroller.remove(); tools.remove(); fallback(); } });
+
+    const onResize = () => layout();
+    window.addEventListener('resize', onResize);
+    return {
+      destroy() {
+        destroyed = true;
+        window.removeEventListener('resize', onResize);
+        observer && observer.disconnect();
+        pages.forEach(p => p.task && p.task.cancel && p.task.cancel());
+        loadTask && loadTask.destroy();
+      }
+    };
+  }
 
   function previewKind(meta, blob) {
     const type = (blob.type || meta.mime || '').toLowerCase();
@@ -169,7 +281,7 @@
     if (type.startsWith('image/')) return 'image';
     if (type.startsWith('video/')) return 'video';
     if (type.startsWith('audio/')) return 'audio';
-    if (type === 'application/pdf' || name.endsWith('.pdf')) return 'frame';
+    if (type === 'application/pdf' || name.endsWith('.pdf')) return 'pdf';
     if (type.startsWith('text/') || /\.(txt|md|csv)$/.test(name)) return 'frame';
     return null;
   }
@@ -180,6 +292,7 @@
     el.remove();
     document.body.classList.remove('lr-doc-viewer-open');
     if (viewerUrl) { URL.revokeObjectURL(viewerUrl); viewerUrl = null; }
+    if (pdfViewer) { pdfViewer.destroy(); pdfViewer = null; }
     if (!fromHistory && history.state && history.state.lrDocViewer) history.back();
   }
   window.closeDocViewer = () => closeDocViewer(false);
@@ -210,14 +323,22 @@
     el.querySelector('.lr-doc-viewer-dl').onclick = () => window.downloadDoc(meta.id);
     const body = el.querySelector('.lr-doc-viewer-body');
     let media;
-    if (kind === 'image') { media = document.createElement('img'); media.alt = meta.name || ''; }
+    const showFrame = () => {
+      const f = document.createElement('iframe');
+      f.className = 'lr-doc-viewer-media lr-doc-viewer-frame';
+      f.title = meta.name || 'Datei';
+      f.src = viewerUrl;
+      body.appendChild(f);
+    };
+    if (kind === 'pdf') pdfViewer = createPdfViewer(body, blob, showFrame);
+    else if (kind === 'image') { media = document.createElement('img'); media.alt = meta.name || ''; }
     else if (kind === 'video' || kind === 'audio') { media = document.createElement(kind); media.controls = true; }
     else if (kind === 'frame') { media = document.createElement('iframe'); media.title = meta.name || 'Datei'; }
     if (media) {
       media.className = 'lr-doc-viewer-media lr-doc-viewer-' + kind;
       media.src = viewerUrl;
       body.appendChild(media);
-    } else {
+    } else if (kind !== 'pdf') {
       body.innerHTML = '<div class="lr-doc-viewer-empty"><span class="emoji">📄</span>' +
         'Für diesen Dateityp gibt es keine Vorschau.<br>Lade die Datei herunter, um sie zu öffnen.</div>';
     }
