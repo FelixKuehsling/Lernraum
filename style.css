@@ -1556,3 +1556,14 @@ html.dark .dash-calendar-card .mini-cal-day { background: var(--bg-soft); }
 /* Heute im Dashboard-Mini-Kalender: muss die Hintergrund-Regeln für hell/dunkel überstimmen */
 html:not(.dark) .dash-calendar-card .mini-cal-day.today,
 html.dark .dash-calendar-card .mini-cal-day.today { background: var(--sage); color: #fff; border-color: var(--sage); }
+/* Unterlagen-Ansicht (Datei öffnen) */
+body.lr-doc-viewer-open { overflow: hidden; }
+#lr-doc-viewer { position: fixed; inset: 0; z-index: 3000; display: flex; flex-direction: column; background: var(--bg); }
+.lr-doc-viewer-bar { display: flex; align-items: center; gap: 10px; padding: 10px 16px; padding-top: max(10px, env(safe-area-inset-top)); background: var(--surface); border-bottom: 1px solid var(--line); }
+.lr-doc-viewer-name { flex: 1; min-width: 0; font-weight: 700; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+.lr-doc-viewer-body { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: auto; padding-bottom: env(safe-area-inset-bottom); }
+.lr-doc-viewer-frame { width: 100%; height: 100%; border: 0; background: #fff; }
+.lr-doc-viewer-image { max-width: 100%; max-height: 100%; object-fit: contain; }
+.lr-doc-viewer-video { max-width: 100%; max-height: 100%; }
+.lr-doc-viewer-empty { text-align: center; color: var(--ink-soft); line-height: 1.6; padding: 24px; }
+.lr-doc-viewer-empty .emoji { display: block; font-size: 36px; margin-bottom: 8px; }

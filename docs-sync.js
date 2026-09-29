@@ -158,21 +158,83 @@
     return result;
   };
 
-  /* Öffnen: Fenster sofort öffnen (sonst blockiert Safari das
-     Pop-up, wenn die Datei erst geladen werden muss). */
+  /* Öffnen: Datei in einer Ansicht innerhalb der App zeigen (mit Zurück-Knopf).
+     Früher ging ein neues Fenster auf – in der Handy-App (Startbildschirm)
+     kam man daraus nicht mehr zurück. */
+  let viewerUrl = null;
+
+  function previewKind(meta, blob) {
+    const type = (blob.type || meta.mime || '').toLowerCase();
+    const name = (meta.name || '').toLowerCase();
+    if (type.startsWith('image/')) return 'image';
+    if (type.startsWith('video/')) return 'video';
+    if (type.startsWith('audio/')) return 'audio';
+    if (type === 'application/pdf' || name.endsWith('.pdf')) return 'frame';
+    if (type.startsWith('text/') || /\.(txt|md|csv)$/.test(name)) return 'frame';
+    return null;
+  }
+
+  function closeDocViewer(fromHistory) {
+    const el = document.getElementById('lr-doc-viewer');
+    if (!el) return;
+    el.remove();
+    document.body.classList.remove('lr-doc-viewer-open');
+    if (viewerUrl) { URL.revokeObjectURL(viewerUrl); viewerUrl = null; }
+    if (!fromHistory && history.state && history.state.lrDocViewer) history.back();
+  }
+  window.closeDocViewer = () => closeDocViewer(false);
+
+  /* Zurück-Taste von Handy/Browser schließt die Ansicht statt die App zu verlassen */
+  window.addEventListener('popstate', () => closeDocViewer(true));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.getElementById('lr-doc-viewer')) closeDocViewer(false);
+  });
+
+  function showDocViewer(meta, blob) {
+    closeDocViewer(true);
+    viewerUrl = URL.createObjectURL(blob);
+    const kind = previewKind(meta, blob);
+    const el = document.createElement('div');
+    el.id = 'lr-doc-viewer';
+    el.setAttribute('role', 'dialog');
+    el.setAttribute('aria-modal', 'true');
+    el.innerHTML =
+      '<div class="lr-doc-viewer-bar">' +
+        '<button type="button" class="btn ghost small lr-doc-viewer-back">‹ Zurück</button>' +
+        '<div class="lr-doc-viewer-name"></div>' +
+        '<button type="button" class="btn small lr-doc-viewer-dl">Herunterladen</button>' +
+      '</div>' +
+      '<div class="lr-doc-viewer-body"></div>';
+    el.querySelector('.lr-doc-viewer-name').textContent = meta.name || 'Datei';
+    el.querySelector('.lr-doc-viewer-back').onclick = () => closeDocViewer(false);
+    el.querySelector('.lr-doc-viewer-dl').onclick = () => window.downloadDoc(meta.id);
+    const body = el.querySelector('.lr-doc-viewer-body');
+    let media;
+    if (kind === 'image') { media = document.createElement('img'); media.alt = meta.name || ''; }
+    else if (kind === 'video' || kind === 'audio') { media = document.createElement(kind); media.controls = true; }
+    else if (kind === 'frame') { media = document.createElement('iframe'); media.title = meta.name || 'Datei'; }
+    if (media) {
+      media.className = 'lr-doc-viewer-media lr-doc-viewer-' + kind;
+      media.src = viewerUrl;
+      body.appendChild(media);
+    } else {
+      body.innerHTML = '<div class="lr-doc-viewer-empty"><span class="emoji">📄</span>' +
+        'Für diesen Dateityp gibt es keine Vorschau.<br>Lade die Datei herunter, um sie zu öffnen.</div>';
+    }
+    document.body.appendChild(el);
+    document.body.classList.add('lr-doc-viewer-open');
+    history.pushState({ lrDocViewer: true }, '');
+    el.querySelector('.lr-doc-viewer-back').focus();
+  }
+
   window.openDoc = async function (id) {
     const meta = docs().find(d => d.id === id);
     if (!meta) return;
-    const win = window.open('', '_blank');
     try {
       const blob = await window.idbGetFile(id);
       if (!blob) throw new Error('fehlt');
-      const url = URL.createObjectURL(blob);
-      if (win) { win.opener = null; win.location.href = url; }
-      else window.open(url, '_blank', 'noopener');
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      showDocViewer(meta, blob);
     } catch (e) {
-      win?.close();
       notify(missingText(meta), 'error');
     }
   };
